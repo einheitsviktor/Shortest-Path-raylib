@@ -37,7 +37,6 @@ GUI::GUI() {
     this->searchButton.rec.y = 50;
     this->searchButton.rec.width = 120;
     this->searchButton.rec.height = 40;
-
 }
 
 // Destructor
@@ -48,6 +47,7 @@ GUI::~GUI() {
 void GUI::RunLoop() {
     while (!WindowShouldClose()) {
         ProcessInput();
+        // GenerateOutput();
     }
 }
 
