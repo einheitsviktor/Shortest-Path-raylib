@@ -17,15 +17,23 @@ constexpr int MAX_TILES_X = 50; // Columns
 constexpr int MAX_TILES_Y = 25; // Rows
 
 
+enum class Algorithm {
+    Bfs,
+    Dijkstra,
+    AStar
+};
+
 class GUI {
 public:
     GUI();
-    void Initialize();
     void RunLoop();
     void Shutdown();
 private:
     void ProcessInput();
     void GenerateOutput();
+    void Clear();
+
+    Algorithm algorithm;
     Vector2 mousePosition = { 0.0f, 0.0f };
     TileState originState = TileState::none;
     Tile* startPtr;

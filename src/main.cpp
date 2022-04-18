@@ -3,7 +3,7 @@
 int main() {
     GUI gui; 
 
-    gui.Initialize();
+    // gui.Initialize();
     gui.RunLoop();
     gui.Shutdown();
 }
