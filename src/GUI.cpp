@@ -3,11 +3,12 @@
 #include <raylib.h>
 #include <iostream>
 
-GUI::GUI() {}
-
-void GUI::Initialize() {
+// Constructor
+GUI::GUI() {
     // Set GUI fps
     SetTargetFPS(60);
+
+    this->algorithm = Algorithm::Bfs;
     // Set GUI width and height
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "New GUI");
     // Initialize tile positions in grid
@@ -36,17 +37,18 @@ void GUI::Initialize() {
     this->searchButton.rec.y = 50;
     this->searchButton.rec.width = 120;
     this->searchButton.rec.height = 40;
+
+}
+
+// Destructor
+GUI::~GUI() {
+    CloseWindow();
 }
 
 void GUI::RunLoop() {
     while (!WindowShouldClose()) {
         ProcessInput();
-        GenerateOutput();
     }
-}
-
-void GUI::Shutdown() {
-    CloseWindow();
 }
 
 // Inside while loop
@@ -54,103 +56,110 @@ void GUI::ProcessInput() {
     this->mousePosition = GetMousePosition();
     // this->btnAction = false;
 
+    // Process Clear and Search buttons
+    if (CheckCollisionPointRec(this->mousePosition, this->clearButton.rec)) {
+        this->clearButton.buttonState = ButtonState::mouse_hover;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            this->clearButton.buttonState = ButtonState::pressed;
+        } else {
+            this->clearButton.buttonState = ButtonState::mouse_hover;
+        }
+    }
+    else this->clearButton.buttonState = ButtonState::normal;
+
+    if (CheckCollisionPointRec(this->mousePosition, this->searchButton.rec)) {
+        this->searchButton.buttonState = ButtonState::mouse_hover;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            this->searchButton.buttonState = ButtonState::pressed;
+        } else {
+            this->searchButton.buttonState = ButtonState::mouse_hover;
+        }
+    }
+    else this->searchButton.buttonState = ButtonState::normal;
+
+    // Process grid
     for (auto& row : this->grid) {
         for (auto& col : row) {
             if (CheckCollisionPointRec(this->mousePosition, col.rec)) {
                 // Use left mouse button to place obstacles or drag and drop start and goal
                 if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-                    // if (col.buttonState == ButtonState::normal) {
                     if (this->startButtonDrag) {
                         if (col.isEmpty()) {
                             col.tileState = TileState::start;
                             this->startPtr->tileState = TileState::empty;
                             this->startPtr = &col;
                         }
-                    }
-                    else if (this->goalButtonDrag) {
+                    } else if (this->goalButtonDrag) {
                         if (col.isEmpty()) {
                             col.tileState = TileState::goal;
                             this->goalPtr->tileState = TileState::empty;
                             this->goalPtr =  &col;
                         }
-                    }
-                    else if (col.isEmpty()) {
+                    } else if (col.isEmpty()) {
                         col.tileState = TileState::obstacle;
-                    }
-                    else if (col.isStart()) {
+                    } else if (col.isStart()) {
                         this->startButtonDrag = true;
-                    }
-                    else if (col.isGoal()) {
+                    } else if (col.isGoal()) {
                         this->goalButtonDrag = true;
                     }
 
-                    // TODO: Convert to if else cases?
-                    // switch (col.tileState) {
-                    //     case TileState::empty : {
-                    //         col.tileState = TileState::obstacle;
-                    //         // col.buttonState = ButtonState::pressed;
-                    //         break;
-                    //     }
-                    //     case TileState::obstacle : break;
-                    //     case TileState::none : break;
-                    //     case TileState::start: {
-                    //         this->startButtonDrag = true;
-                    //         break;
-                    //     }
-                    //     case TileState::goal : {
-                    //         this->goalButtonDrag = true;
-                    //         break;
-                    //     }
-                    //     // default: col.buttonState = ButtonState::pressed; break;
-                    //     default: break;
-                    // }
-
-                    // }
                 }
                 // Use right mouse button to erase obstacles
                 else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
                     if (col.isObstacle()) {
                         col.tileState = TileState::empty;
-                        // col.buttonState = ButtonState::pressed;
                     }
                 }
             }
             if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-                // col.buttonState = ButtonState::normal;
                 this->startButtonDrag = false;
                 this->goalButtonDrag = false;
             }
         }
     }
-
+    // TODO: Call search algorithms from here
+    this->GenerateOutput();
 }
 
 
 void GUI::GenerateOutput() {
     BeginDrawing();
     {
-        // Draw control buttons
-        DrawRectangleRec(this->clearButton.rec, SKYBLUE);
-        DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, 24, BLACK);
-
-        DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.6f));
-        DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
-
         ClearBackground(RAYWHITE);
+
+        // Draw clearButton
+        DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.5f));
+        DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, 24, BLACK);
+        if (this->clearButton.buttonState == ButtonState::pressed) {
+            DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 1.0f));
+            DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, 24, BLACK);
+        } else if (this->clearButton.buttonState == ButtonState::mouse_hover) {
+            DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.51f));
+            DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, 24, BLACK);
+        }
+
+        // Draw searchButton
+        DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.5f));
+        DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
+        if (this->searchButton.buttonState == ButtonState::pressed) {
+            DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 1.0f));
+            DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
+        } else if (this->searchButton.buttonState == ButtonState::mouse_hover) {
+            DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.51f));
+            DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
+        }
+
         for (const auto& row : this->grid) {
             for (const auto& col : row) {
                 if (col.isObstacle()) {
                     DrawRectangleRec(col.rec, Fade(BLACK, 0.7f));
-                }
-                else if (col.isStart()) {
+                } else if (col.isStart()) {
                     DrawRectangleRec(col.rec, GREEN);
                     DrawText("S", col.rec.x+5, col.rec.y+2, 24, DARKBROWN);
-                }
-                else if (col.isGoal()) {
+                } else if (col.isGoal()) {
                     DrawRectangleRec(col.rec, RED);
                     DrawText("G", col.rec.x+5, col.rec.y+2, 24, BLACK);
-                }
-                else {
+                } else {
                     DrawRectangleRec(col.rec, Fade(LIGHTGRAY, 0.5f));
                 }
             }
