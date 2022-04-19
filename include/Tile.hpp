@@ -8,10 +8,10 @@ enum class TileState {
     none,
     empty,
     obstacle,
-    // visited,
+    visited,
     start,
     goal, 
-    // path
+    path
 };
 
 enum class ButtonState {
@@ -30,10 +30,10 @@ struct Tile {
     // Getter functions
     bool isEmpty()    const { return this->tileState == TileState::empty; }
     bool isObstacle() const { return this->tileState == TileState::obstacle; }
-    // bool isVisited()  const { return this->tileState == TileState::visited; }
+    bool isVisited()  const { return this->tileState == TileState::visited; }
     bool isStart()    const { return this->tileState == TileState::start; }
     bool isGoal()     const { return this->tileState == TileState::goal; }
-    // bool isPath()     const { return this->tileState == TileState::path; }
+    bool isPath()     const { return this->tileState == TileState::path; }
 };
 
 struct Coordinates {

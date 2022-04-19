@@ -1,23 +1,32 @@
 #include "GUI.hpp"
-#include <cstdio>
+// #include <cstdio>
 #include <raylib.h>
 #include <iostream>
+#include <thread>
+#include <chrono>
+#include <semaphore>
 
 // Constructor
-GUI::GUI() {
+GUI::GUI()
+    : algorithm(Algorithm::Bfs)
+    , mousePosition(Vector2{ 0.0f, 0.0f })
+    , originState(TileState::none)
+    , startPtr(nullptr)
+    , goalPtr(nullptr)
+    , startButtonDrag(false)
+    , goalButtonDrag(false)
+    , searchExecuted(false)
+{
     // Set GUI fps
     SetTargetFPS(60);
-
-    this->algorithm = Algorithm::Bfs;
     // Set GUI width and height
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "New GUI");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shortest Path raylib");
+    // SetWindowPosition(100, 100);
     // Initialize tile positions in grid
     for (int i = 0, max_tiles = MAX_TILES_X * MAX_TILES_Y; i < max_tiles; ++i) {
-        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.x =
-            30.0f  + TILE_WIDTH * (i % MAX_TILES_X) + 1.0f * (i % MAX_TILES_X);
-        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.y =
-            150.0f + TILE_WIDTH * (i / MAX_TILES_X) + 1.0f * (i / MAX_TILES_X);
-        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.width = TILE_WIDTH;
+        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.x      = 30.0f  + TILE_WIDTH * (i % MAX_TILES_X) + 1.0f * (i % MAX_TILES_X);
+        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.y      = 150.0f + TILE_WIDTH * (i / MAX_TILES_X) + 1.0f * (i / MAX_TILES_X);
+        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.width  = TILE_WIDTH;
         this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.height = TILE_HEIGHT;
     }
 
@@ -61,6 +70,11 @@ void GUI::ProcessInput() {
         this->clearButton.buttonState = ButtonState::mouse_hover;
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             this->clearButton.buttonState = ButtonState::pressed;
+        }
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            // std::thread clear(&GUI::Clear, this);
+            // clear.detach();
+            this->ClearGrid();
         } else {
             this->clearButton.buttonState = ButtonState::mouse_hover;
         }
@@ -76,6 +90,7 @@ void GUI::ProcessInput() {
         }
     }
     else this->searchButton.buttonState = ButtonState::normal;
+    
 
     // Process grid
     for (auto& row : this->grid) {
@@ -145,7 +160,7 @@ void GUI::GenerateOutput() {
             DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 1.0f));
             DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
         } else if (this->searchButton.buttonState == ButtonState::mouse_hover) {
-            DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.51f));
+            DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.5f));
             DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
         }
 
@@ -166,4 +181,19 @@ void GUI::GenerateOutput() {
         }
     }
     EndDrawing();
+}
+
+void GUI::ClearGrid() {
+    // static std::mutex mut;
+    for (auto& row : this->grid) {
+        for (auto& col : row) {
+            if (!col.isStart() && !col.isGoal()) {
+                // mut.lock();
+                col.tileState = TileState::empty;
+                // mut.unlock();
+                // std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
+            }
+        }
+    }
+    this->searchExecuted = false;
 }
