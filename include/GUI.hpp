@@ -4,6 +4,7 @@
 
 #include <raylib.h>
 #include <array>
+#include <mutex>
 
 
 // MARKER: 
@@ -34,16 +35,19 @@ private:
     void Clear();
 
     Algorithm algorithm;
-    Vector2 mousePosition = { 0.0f, 0.0f };
-    TileState originState = TileState::none;
+    Vector2 mousePosition;
+    TileState originState;
     Tile* startPtr;
     Tile* goalPtr;
-    bool startButtonDrag = false;
-    bool goalButtonDrag = false;
+    bool startButtonDrag;
+    bool goalButtonDrag;
+    bool searchExecuted;
 
     Tile clearButton;
     Tile searchButton;
 
     std::array<std::array<Tile, MAX_TILES_X>, MAX_TILES_Y> grid;
     // std::array<std::array<int, MAX_TILES_X>, MAX_TILES_Y> colorState;
+
+    // std::mutex clear_mutex;
 };
