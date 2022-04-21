@@ -91,7 +91,6 @@ void GUI::ProcessInput() {
     }
     else this->searchButton.buttonState = ButtonState::normal;
     
-
     // Process grid
     for (auto& row : this->grid) {
         for (auto& col : row) {
