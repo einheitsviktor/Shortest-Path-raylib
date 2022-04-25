@@ -33,3 +33,5 @@
 
 .cache/*
 build/*
+
+session.vim

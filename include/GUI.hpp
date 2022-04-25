@@ -4,7 +4,11 @@
 
 #include <raylib.h>
 #include <array>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <mutex>
+#include <vector>
 
 
 // MARKER: 
@@ -30,16 +34,31 @@ public:
     ~GUI();
     void RunLoop();
 private:
+    // ryalib related methods
     void ProcessInput();
     void GenerateOutput();
     void ClearGrid();
 
-    // Search algorithms
+
+    // Search related methods and attributes
+    bool inBounds(Coordinates& id) const;
+    bool passable(Coordinates& id) const;
+    std::vector<Coordinates> neighbors(Coordinates& id) const;
+    void collectObstacles();
+
     void Bfs();
     void Dijkstra();
     void AStar();
 
+    void clearContainers();
+
+    std::array<Coordinates, 4> Delta;
+    std::unordered_map<Coordinates, Coordinates> cameFrom;
+    std::unordered_set<Coordinates> obstacles;
+
     Algorithm algorithm;
+
+    // raylib related attributes
     Vector2 mousePosition;
     TileState originState;
     Tile* startPtr;

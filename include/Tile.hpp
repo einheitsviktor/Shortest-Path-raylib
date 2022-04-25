@@ -21,8 +21,15 @@ enum class ButtonState {
 };
 
 struct Tile {
-    Tile() {}
+    Tile() {};
+    Tile(int y, int x, int recY, int recX, int recWidth, int recHeight) : y(y) , x(x) {
+        rec.y = recY;
+        rec.x = recX;
+        rec.width = recWidth;
+        rec.height = recHeight;
+    }
     
+    int y, x;
     Rectangle rec;
     TileState tileState = TileState::empty;
     ButtonState buttonState = ButtonState::normal;
@@ -37,7 +44,7 @@ struct Tile {
 };
 
 struct Coordinates {
-    int x, y;
+    int y, x;
     friend bool operator==(const Coordinates& a, const Coordinates& b) {
         return a.x == b.x && a.y == b.y;
     }

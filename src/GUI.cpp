@@ -1,10 +1,12 @@
 #include "GUI.hpp"
-// #include <cstdio>
+
 #include <raylib.h>
 #include <iostream>
 #include <thread>
 #include <chrono>
 #include <semaphore>
+#include <vector>
+#include <queue>
 
 // Constructor
 GUI::GUI()
@@ -21,37 +23,53 @@ GUI::GUI()
     SetTargetFPS(60);
     // Set GUI width and height
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shortest Path raylib");
-    // SetWindowPosition(100, 100);
+
+    std::array<Coordinates, 4> Delta {
+        Coordinates{1, 0},  // East
+        Coordinates{-1, 0}, // West
+        Coordinates{0, -1}, // North
+        Coordinates{0, 1}   // South
+    };
+
+
     // Initialize tile positions in grid
     for (int i = 0, max_tiles = MAX_TILES_X * MAX_TILES_Y; i < max_tiles; ++i) {
-        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.x      = 30.0f  + TILE_WIDTH * (i % MAX_TILES_X) + 1.0f * (i % MAX_TILES_X);
-        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.y      = 150.0f + TILE_WIDTH * (i / MAX_TILES_X) + 1.0f * (i / MAX_TILES_X);
-        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.width  = TILE_WIDTH;
-        this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.height = TILE_HEIGHT;
+        // this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.x      = 30.0f  + TILE_WIDTH * (i % MAX_TILES_X) + 1.0f * (i % MAX_TILES_X);
+        // this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.y      = 150.0f + TILE_WIDTH * (i / MAX_TILES_X) + 1.0f * (i / MAX_TILES_X);
+        // this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.width  = TILE_WIDTH;
+        // this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.height = TILE_HEIGHT;
+
+        int y = i / (max_tiles/MAX_TILES_Y);
+        int x = i % MAX_TILES_X;
+        int recX = 30.0f  + TILE_WIDTH * (i % MAX_TILES_X) + 1.0f * (i % MAX_TILES_X); 
+        int recY = 150.0f + TILE_WIDTH * (i / MAX_TILES_X) + 1.0f * (i / MAX_TILES_X);
+        this->grid[y][x] = Tile(y, x, recY, recX, TILE_WIDTH, TILE_WIDTH);
     }
 
     //         y  x
-    this->grid[3][3].tileState = TileState::start;
+    this->grid[3][3].tileState   = TileState::start;
     this->grid[21][46].tileState = TileState::goal;
     this->startPtr = &this->grid[3][3];
     this->goalPtr = &this->grid[21][46];
 
     // Initialize the reset button
-    this->clearButton.rec.x = 1040;
-    this->clearButton.rec.y = 50;
-    this->clearButton.rec.width = 100;
-    this->clearButton.rec.height = 40;
+    this->clearButton = Tile(0, 0, 50, 1040, 100, 40);
 
-    this->searchButton.rec.x = 1150;
-    this->searchButton.rec.y = 50;
-    this->searchButton.rec.width = 120;
-    this->searchButton.rec.height = 40;
+    // this->clearButton.rec.x = 1040;
+    // this->clearButton.rec.y = 50;
+    // this->clearButton.rec.width = 100;
+    // this->clearButton.rec.height = 40;
+
+    this->searchButton = Tile(0, 0, 50, 1150, 120, 40);
+
+    // this->searchButton.rec.x = 1150;
+    // this->searchButton.rec.y = 50;
+    // this->searchButton.rec.width = 120;
+    // this->searchButton.rec.height = 40;
 }
 
 // Destructor
-GUI::~GUI() {
-    CloseWindow();
-}
+GUI::~GUI() { CloseWindow(); }
 
 void GUI::RunLoop() {
     while (!WindowShouldClose()) {
@@ -195,4 +213,74 @@ void GUI::ClearGrid() {
         }
     }
     this->searchExecuted = false;
+}
+
+bool GUI::inBounds(Coordinates& id) const {
+    return 0 <= id.x && id.x < this->grid[0].size() && 0 <= id.y && id.y < this->grid.size();
+}
+
+bool GUI::passable(Coordinates& id) const {
+    return this->obstacles.find(id) == this->obstacles.end();
+}
+
+std::vector<Coordinates> GUI::neighbors(Coordinates& id) const {
+    std::vector<Coordinates> ret;
+    for (const auto& dir : this->Delta) {
+        Coordinates next{id.x + dir.x, id.y + dir.y};
+        if (inBounds(next) && passable(next)) {
+            ret.push_back(next);
+        }
+    }
+    // Nudge directions for "prettier" paths
+    if ((id.x + id.y) % 2 == 0) {
+        std::reverse(ret.begin(), ret.end());
+    }
+    return ret;
+}
+
+void GUI::collectObstacles() {
+    for (const auto& row : this->grid) {
+        for (const auto& col : row) {
+            if (col.isObstacle()) {
+                this->obstacles.insert(Coordinates{col.y, col.x});
+            }
+        }
+    }
+}
+
+void GUI::clearContainers() {
+    this->obstacles.clear();
+    this->cameFrom.clear();
+    // this->costSoFar.clear();
+}
+
+void GUI::Bfs() {
+    this->clearContainers();
+    this->collectObstacles();
+    
+    std::queue<Coordinates> frontier;
+    frontier.push(Coordinates{this->startPtr->y, this->startPtr->x});
+
+    this->cameFrom[Coordinates{this->startPtr->y, this->startPtr->x}] = Coordinates{this->startPtr->y, this->startPtr->x};
+
+    while (!frontier.empty()) {
+        Coordinates current = frontier.front();
+        frontier.pop();
+
+        if (current == Coordinates{this->goalPtr->y, this->goalPtr->x}) {
+            // TODO: implement printPath/setPath
+            std::cout << "Path found!\n";
+            break;
+        }
+
+        for (Coordinates next : this->neighbors(current)) {
+            if (this->cameFrom.find(next) == this->cameFrom.end()) {
+                frontier.push(next);
+                this->cameFrom[next] = current;
+                this->grid[next.y][next.x].tileState = TileState::visited;
+                // TODO: insert sleep thread
+            }
+        }
+    }
+
 }
