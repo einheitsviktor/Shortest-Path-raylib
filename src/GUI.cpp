@@ -18,34 +18,21 @@ GUI::GUI()
     , startButtonDrag(false)
     , goalButtonDrag(false)
     , searchExecuted(false)
+    , isGUIBusy(false)
 {
     // Set GUI fps
     SetTargetFPS(60);
     // Set GUI width and height
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shortest Path raylib");
 
-    std::array<Coordinates, 4> Delta {
-        Coordinates{1, 0},  // East
-        Coordinates{-1, 0}, // West
-        Coordinates{0, -1}, // North
-        Coordinates{0, 1}   // South
-    };
-
-
     // Initialize tile positions in grid
     for (int i = 0, max_tiles = MAX_TILES_X * MAX_TILES_Y; i < max_tiles; ++i) {
-        // this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.x      = 30.0f  + TILE_WIDTH * (i % MAX_TILES_X) + 1.0f * (i % MAX_TILES_X);
-        // this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.y      = 150.0f + TILE_WIDTH * (i / MAX_TILES_X) + 1.0f * (i / MAX_TILES_X);
-        // this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.width  = TILE_WIDTH;
-        // this->grid[i/(max_tiles/MAX_TILES_Y)][i%MAX_TILES_X].rec.height = TILE_HEIGHT;
-
         int y = i / (max_tiles/MAX_TILES_Y);
         int x = i % MAX_TILES_X;
         int recX = 30.0f  + TILE_WIDTH * (i % MAX_TILES_X) + 1.0f * (i % MAX_TILES_X); 
         int recY = 150.0f + TILE_WIDTH * (i / MAX_TILES_X) + 1.0f * (i / MAX_TILES_X);
         this->grid[y][x] = Tile(y, x, recY, recX, TILE_WIDTH, TILE_WIDTH);
     }
-
     //         y  x
     this->grid[3][3].tileState   = TileState::start;
     this->grid[21][46].tileState = TileState::goal;
@@ -54,18 +41,7 @@ GUI::GUI()
 
     // Initialize the reset button
     this->clearButton = Tile(0, 0, 50, 1040, 100, 40);
-
-    // this->clearButton.rec.x = 1040;
-    // this->clearButton.rec.y = 50;
-    // this->clearButton.rec.width = 100;
-    // this->clearButton.rec.height = 40;
-
     this->searchButton = Tile(0, 0, 50, 1150, 120, 40);
-
-    // this->searchButton.rec.x = 1150;
-    // this->searchButton.rec.y = 50;
-    // this->searchButton.rec.width = 120;
-    // this->searchButton.rec.height = 40;
 }
 
 // Destructor
@@ -74,36 +50,42 @@ GUI::~GUI() { CloseWindow(); }
 void GUI::RunLoop() {
     while (!WindowShouldClose()) {
         ProcessInput();
-        // GenerateOutput();
+        GenerateOutput();
     }
 }
 
 // Inside while loop
 void GUI::ProcessInput() {
-    this->mousePosition = GetMousePosition();
-    // this->btnAction = false;
+    // Do not accecpt input if a search is currently executing
+    if (this->isGUIBusy) return;
 
-    // Process Clear and Search buttons
+    this->mousePosition = GetMousePosition();
+    // Process Clear button
     if (CheckCollisionPointRec(this->mousePosition, this->clearButton.rec)) {
         this->clearButton.buttonState = ButtonState::mouse_hover;
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             this->clearButton.buttonState = ButtonState::pressed;
         }
         else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            // std::thread clear(&GUI::Clear, this);
-            // clear.detach();
             this->ClearGrid();
-        } else {
+        }
+        else {
             this->clearButton.buttonState = ButtonState::mouse_hover;
         }
     }
     else this->clearButton.buttonState = ButtonState::normal;
 
+    // Process Sesarch button
     if (CheckCollisionPointRec(this->mousePosition, this->searchButton.rec)) {
         this->searchButton.buttonState = ButtonState::mouse_hover;
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             this->searchButton.buttonState = ButtonState::pressed;
-        } else {
+        }
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            std::thread search(&GUI::Bfs, this);
+            search.detach();
+        }
+        else {
             this->searchButton.buttonState = ButtonState::mouse_hover;
         }
     }
@@ -149,8 +131,6 @@ void GUI::ProcessInput() {
             }
         }
     }
-    // TODO: Call search algorithms from here
-    this->GenerateOutput();
 }
 
 
@@ -181,6 +161,7 @@ void GUI::GenerateOutput() {
             DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
         }
 
+        // Draw grid
         for (const auto& row : this->grid) {
             for (const auto& col : row) {
                 if (col.isObstacle()) {
@@ -191,7 +172,14 @@ void GUI::GenerateOutput() {
                 } else if (col.isGoal()) {
                     DrawRectangleRec(col.rec, RED);
                     DrawText("G", col.rec.x+5, col.rec.y+2, 24, BLACK);
-                } else {
+                } 
+                else if (col.isVisited()) {
+                    DrawRectangleRec(col.rec, Fade(DARKBLUE, 0.3f));
+                }
+                else if (col.isPath()) {
+                    DrawRectangleRec(col.rec, YELLOW);
+                }
+                else {
                     DrawRectangleRec(col.rec, Fade(LIGHTGRAY, 0.5f));
                 }
             }
@@ -201,14 +189,10 @@ void GUI::GenerateOutput() {
 }
 
 void GUI::ClearGrid() {
-    // static std::mutex mut;
     for (auto& row : this->grid) {
         for (auto& col : row) {
             if (!col.isStart() && !col.isGoal()) {
-                // mut.lock();
                 col.tileState = TileState::empty;
-                // mut.unlock();
-                // std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
             }
         }
     }
@@ -242,7 +226,7 @@ void GUI::collectObstacles() {
     for (const auto& row : this->grid) {
         for (const auto& col : row) {
             if (col.isObstacle()) {
-                this->obstacles.insert(Coordinates{col.y, col.x});
+                this->obstacles.insert(Coordinates{col.x, col.y});
             }
         }
     }
@@ -254,33 +238,58 @@ void GUI::clearContainers() {
     // this->costSoFar.clear();
 }
 
+void GUI::printPath() {
+    std::vector<Coordinates> path;
+    Coordinates current{this->goalPtr->x, this->goalPtr->y};
+    Coordinates start{this->startPtr->x, this->startPtr->y};
+    while (current != start) {
+        path.push_back(current);
+        current = this->cameFrom[current];
+    }
+    auto rit = path.rbegin();
+    for (; rit != path.rend(); ++rit) {
+        this->grid[rit->y][rit->x].tileState = TileState::path;
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+}
+
 void GUI::Bfs() {
+    // Lock GUI inputs
+    this->isGUIBusy = true;
+    static std::mutex mut;
+
     this->clearContainers();
     this->collectObstacles();
     
     std::queue<Coordinates> frontier;
-    frontier.push(Coordinates{this->startPtr->y, this->startPtr->x});
+    frontier.push(Coordinates{this->startPtr->x, this->startPtr->y});
 
-    this->cameFrom[Coordinates{this->startPtr->y, this->startPtr->x}] = Coordinates{this->startPtr->y, this->startPtr->x};
+    this->cameFrom[Coordinates{this->startPtr->x, this->startPtr->y}] = Coordinates{this->startPtr->x, this->startPtr->y};
 
     while (!frontier.empty()) {
         Coordinates current = frontier.front();
         frontier.pop();
-
-        if (current == Coordinates{this->goalPtr->y, this->goalPtr->x}) {
-            // TODO: implement printPath/setPath
+        if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
             std::cout << "Path found!\n";
+            this->printPath();
             break;
         }
-
         for (Coordinates next : this->neighbors(current)) {
             if (this->cameFrom.find(next) == this->cameFrom.end()) {
                 frontier.push(next);
                 this->cameFrom[next] = current;
-                this->grid[next.y][next.x].tileState = TileState::visited;
-                // TODO: insert sleep thread
+                mut.lock();
+                    if (this->grid[next.y][next.x].isGoal())
+                        this->goalPtr->tileState = TileState::goal;
+                    else
+                        this->grid[next.y][next.x].tileState = TileState::visited;
+                mut.unlock();
+                std::this_thread::sleep_for(std::chrono::milliseconds(3));
             }
         }
     }
-
+    this->goalPtr->tileState = TileState::goal;
+    // Release GUI processing
+    this->clearContainers();
+    this->isGUIBusy = false;
 }
