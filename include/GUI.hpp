@@ -42,17 +42,23 @@ private:
 
     // Search related methods and attributes
     bool inBounds(Coordinates& id) const;
-    bool passable(Coordinates& id) const;
+    bool passable(Coordinates id) const;
     std::vector<Coordinates> neighbors(Coordinates& id) const;
     void collectObstacles();
+    void clearContainers();
+    void printPath();
 
     void Bfs();
     void Dijkstra();
     void AStar();
 
-    void clearContainers();
 
-    std::array<Coordinates, 4> Delta;
+    std::array<Coordinates, 4> Delta {
+        Coordinates{1, 0},  // East
+        Coordinates{-1, 0}, // West
+        Coordinates{0, -1}, // North
+        Coordinates{0, 1}   // South
+    };
     std::unordered_map<Coordinates, Coordinates> cameFrom;
     std::unordered_set<Coordinates> obstacles;
 
@@ -67,6 +73,7 @@ private:
     bool startButtonDrag;
     bool goalButtonDrag;
     bool searchExecuted;
+    bool isGUIBusy;
 
     Tile clearButton;
     Tile searchButton;

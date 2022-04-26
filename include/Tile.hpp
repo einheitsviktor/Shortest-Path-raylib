@@ -44,7 +44,9 @@ struct Tile {
 };
 
 struct Coordinates {
-    int y, x;
+    // Coordinates() {}
+    // Coordinates(int y, int x) : y(y), x(x) {}
+    int x, y;
     friend bool operator==(const Coordinates& a, const Coordinates& b) {
         return a.x == b.x && a.y == b.y;
     }
