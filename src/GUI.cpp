@@ -84,7 +84,7 @@ void GUI::ProcessInput() {
         // TODO: Implement different Algorithm buttons
         else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
             // Detach search algorithm as an own thread
-            std::thread search(&GUI::Dijkstra, this);
+            std::thread search(&GUI::AStar, this);
             search.detach();
         }
         else {
@@ -285,7 +285,7 @@ void GUI::Bfs() {
         Coordinates current = frontier.front();
         frontier.pop();
         if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
-            std::cout << "Bfs Path found!\n";
+            // std::cout << "Bfs Path found!\n";
             this->printPath();
             break;
         }
@@ -326,7 +326,7 @@ void GUI::Dijkstra() {
     while (!frontier.empty()) {
         Coordinates current = frontier.get();
         if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
-            std::cout << "Dijkstra path found!\n";
+            // std::cout << "Dijkstra path found!\n";
             this->printPath();
             break;
         }
@@ -336,6 +336,50 @@ void GUI::Dijkstra() {
                 this->costSoFar[next] = newCost;
                 this->cameFrom[next] = current;
                 frontier.put(next, newCost);
+                mut.lock();
+                    if (this->grid[next.y][next.x].isGoal())
+                        this->goalPtr->tileState = TileState::goal;
+                    else
+                        this->grid[next.y][next.x].tileState = TileState::visited;
+                mut.unlock();
+                std::this_thread::sleep_for(std::chrono::milliseconds(3));
+            }
+        }
+    }
+    this->goalPtr->tileState = TileState::goal;
+    // Release GUI processing
+    this->clearContainers();
+    this->isGUIBusy = false;
+}
+
+void GUI::AStar() {
+    // Lock GUI inputs
+    this->isGUIBusy = true;
+    std::mutex mut;
+
+    this->clearContainers();
+    this->collectObstacles();
+
+    PrioriyQueue<Coordinates, double> frontier;
+    frontier.put(Coordinates{this->startPtr->x, this->startPtr->y}, 0);
+
+    this->cameFrom[Coordinates{this->startPtr->x, this->startPtr->y}] = Coordinates{this->startPtr->x, this->startPtr->y};
+    this->costSoFar[Coordinates{this->startPtr->x, this->startPtr->y}] = 0;
+
+    while (!frontier.empty()) {
+        Coordinates current = frontier.get();
+        if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
+            // std::cout << "AStar path found!\n";
+            this->printPath();
+            break;
+        }
+        for (Coordinates next : this->neighbors(current)) {
+            double newCost = this->costSoFar[current] + this->cost(current, next);
+            if (this->costSoFar.find(next) == this->costSoFar.end() || newCost < this->costSoFar[next]) {
+                this->costSoFar[next] = newCost;
+                double priority = newCost + this->heuristic(next, Coordinates{this->goalPtr->x, this->goalPtr->y});
+                frontier.put(next, priority);
+                this->cameFrom[next] = current;
                 mut.lock();
                     if (this->grid[next.y][next.x].isGoal())
                         this->goalPtr->tileState = TileState::goal;
