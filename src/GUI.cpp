@@ -203,7 +203,7 @@ bool GUI::inBounds(Coordinates& id) const {
     return 0 <= id.x && id.x < this->grid[0].size() && 0 <= id.y && id.y < this->grid.size();
 }
 
-bool GUI::passable(Coordinates& id) const {
+bool GUI::passable(Coordinates id) const {
     return this->obstacles.find(id) == this->obstacles.end();
 }
 
@@ -246,6 +246,10 @@ void GUI::printPath() {
         path.push_back(current);
         current = this->cameFrom[current];
     }
+// <<<<<<< HEAD
+// =======
+//     this->goalPtr->tileState = TileState::goal;
+// >>>>>>> 430086847c782cd3648fbcc55053e5ea3b4aabff
     auto rit = path.rbegin();
     for (; rit != path.rend(); ++rit) {
         this->grid[rit->y][rit->x].tileState = TileState::path;

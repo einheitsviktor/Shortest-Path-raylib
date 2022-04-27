@@ -42,7 +42,7 @@ private:
 
     // Search related methods and attributes
     bool inBounds(Coordinates& id) const;
-    bool passable(Coordinates& id) const;
+    bool passable(Coordinates id) const;
     std::vector<Coordinates> neighbors(Coordinates& id) const;
     void collectObstacles();
     void clearContainers();
