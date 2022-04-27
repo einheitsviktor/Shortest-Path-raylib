@@ -6,7 +6,6 @@
 #include <chrono>
 #include <semaphore>
 #include <vector>
-#include <queue>
 
 // Constructor
 GUI::GUI()
@@ -81,8 +80,10 @@ void GUI::ProcessInput() {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             this->searchButton.buttonState = ButtonState::pressed;
         }
+        // TODO: Implement different Algorithm buttons
         else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            std::thread search(&GUI::Bfs, this);
+            // Detach search algorithm as an own thread
+            std::thread search(&GUI::Dijkstra, this);
             search.detach();
         }
         else {
@@ -235,7 +236,7 @@ void GUI::collectObstacles() {
 void GUI::clearContainers() {
     this->obstacles.clear();
     this->cameFrom.clear();
-    // this->costSoFar.clear();
+    this->costSoFar.clear();
 }
 
 void GUI::printPath() {
@@ -246,10 +247,6 @@ void GUI::printPath() {
         path.push_back(current);
         current = this->cameFrom[current];
     }
-// <<<<<<< HEAD
-// =======
-//     this->goalPtr->tileState = TileState::goal;
-// >>>>>>> 430086847c782cd3648fbcc55053e5ea3b4aabff
     auto rit = path.rbegin();
     for (; rit != path.rend(); ++rit) {
         this->grid[rit->y][rit->x].tileState = TileState::path;
@@ -257,10 +254,19 @@ void GUI::printPath() {
     }
 }
 
+double GUI::cost(Coordinates fromNode, Coordinates toNode) const {
+    bool nudge = false;
+    int x1 = fromNode.x, y1 = fromNode.y;
+    int x2 = toNode.x, y2 = toNode.y;
+    if ((x1 + y1) % 2 == 0 && x2 != x1) nudge = true;
+    if ((x1 + y1) % 2 == 1 && y2 != y1) nudge = true;
+    return  nudge ? 1.001 : 1;
+}
+
 void GUI::Bfs() {
     // Lock GUI inputs
     this->isGUIBusy = true;
-    static std::mutex mut;
+    std::mutex mut;
 
     this->clearContainers();
     this->collectObstacles();
@@ -274,7 +280,7 @@ void GUI::Bfs() {
         Coordinates current = frontier.front();
         frontier.pop();
         if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
-            std::cout << "Path found!\n";
+            std::cout << "Bfs Path found!\n";
             this->printPath();
             break;
         }
@@ -282,6 +288,49 @@ void GUI::Bfs() {
             if (this->cameFrom.find(next) == this->cameFrom.end()) {
                 frontier.push(next);
                 this->cameFrom[next] = current;
+                mut.lock();
+                    if (this->grid[next.y][next.x].isGoal())
+                        this->goalPtr->tileState = TileState::goal;
+                    else
+                        this->grid[next.y][next.x].tileState = TileState::visited;
+                mut.unlock();
+                std::this_thread::sleep_for(std::chrono::milliseconds(3));
+            }
+        }
+    }
+    this->goalPtr->tileState = TileState::goal;
+    // Release GUI processing
+    this->clearContainers();
+    this->isGUIBusy = false;
+}
+
+void GUI::Dijkstra() {
+    // Lock GUI inputs
+    this->isGUIBusy = true;
+    std::mutex mut;
+
+    this->clearContainers();
+    this->collectObstacles();
+
+    PrioriyQueue<Coordinates, double> frontier;
+    frontier.put(Coordinates{this->startPtr->x, this->startPtr->y}, 0);
+
+    this->cameFrom[Coordinates{this->startPtr->x, this->startPtr->y}] = Coordinates{this->startPtr->x, this->startPtr->y};
+    this->costSoFar[Coordinates{this->startPtr->x, this->startPtr->y}] = 0;
+
+    while (!frontier.empty()) {
+        Coordinates current = frontier.get();
+        if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
+            std::cout << "Dijkstra path found!\n";
+            this->printPath();
+            break;
+        }
+        for (Coordinates next : this->neighbors(current)) {
+            double newCost = this->costSoFar[current] + this->cost(current, next);
+            if (this->costSoFar.find(next) == this->costSoFar.end() || newCost < this->costSoFar[next]) {
+                this->costSoFar[next] = newCost;
+                this->cameFrom[next] = current;
+                frontier.put(next, newCost);
                 mut.lock();
                     if (this->grid[next.y][next.x].isGoal())
                         this->goalPtr->tileState = TileState::goal;

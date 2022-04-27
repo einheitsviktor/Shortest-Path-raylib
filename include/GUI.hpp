@@ -2,6 +2,7 @@
 
 #include "Tile.hpp"
 
+#include <queue>
 #include <raylib.h>
 #include <array>
 #include <unordered_map>
@@ -18,8 +19,8 @@ constexpr int SCREEN_HEIGHT = 830;
 constexpr float TILE_WIDTH  = 25.0f;
 constexpr float TILE_HEIGHT = 25.0f;
 
-constexpr int MAX_TILES_X = 50; // Columns
 constexpr int MAX_TILES_Y = 25; // Rows
+constexpr int MAX_TILES_X = 50; // Columns
 
 
 enum class Algorithm {
@@ -47,11 +48,12 @@ private:
     void collectObstacles();
     void clearContainers();
     void printPath();
+    double cost(Coordinates fromNode, Coordinates toNode) const;
 
+    // Search algorithms
     void Bfs();
     void Dijkstra();
     void AStar();
-
 
     std::array<Coordinates, 4> Delta {
         Coordinates{1, 0},  // East
@@ -59,8 +61,9 @@ private:
         Coordinates{0, -1}, // North
         Coordinates{0, 1}   // South
     };
-    std::unordered_map<Coordinates, Coordinates> cameFrom;
     std::unordered_set<Coordinates> obstacles;
+    std::unordered_map<Coordinates, Coordinates> cameFrom;
+    std::unordered_map<Coordinates, double> costSoFar;
 
     Algorithm algorithm;
 
@@ -79,4 +82,18 @@ private:
     Tile searchButton;
 
     std::array<std::array<Tile, MAX_TILES_X>, MAX_TILES_Y> grid;
+};
+
+// Wrapper for own priority queue sort
+template<typename T, typename priority_t>
+struct PrioriyQueue {
+    std::priority_queue<std::pair<priority_t, T>, std::vector<std::pair<priority_t, T>>,
+        std::greater<std::pair<priority_t, T>>> elements;
+    inline bool empty() const { return elements.empty(); }
+    inline void put(T item, priority_t priority) { elements.emplace(priority, item); }
+    T get() {
+        T ret = elements.top().second;
+        elements.pop();
+        return ret;
+    }
 };
