@@ -49,6 +49,7 @@ private:
     void clearContainers();
     void printPath();
     double cost(Coordinates fromNode, Coordinates toNode) const;
+    double heuristic(const Coordinates& a, const Coordinates& b);
 
     // Search algorithms
     void Bfs();

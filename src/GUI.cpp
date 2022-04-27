@@ -1,5 +1,6 @@
 #include "GUI.hpp"
 
+#include <cmath>
 #include <raylib.h>
 #include <iostream>
 #include <thread>
@@ -261,6 +262,10 @@ double GUI::cost(Coordinates fromNode, Coordinates toNode) const {
     if ((x1 + y1) % 2 == 0 && x2 != x1) nudge = true;
     if ((x1 + y1) % 2 == 1 && y2 != y1) nudge = true;
     return  nudge ? 1.001 : 1;
+}
+
+double GUI::heuristic(const Coordinates& a, const Coordinates& b) {
+    return std::abs(b.x - a.x) + std::abs(b.y - a.y);
 }
 
 void GUI::Bfs() {
