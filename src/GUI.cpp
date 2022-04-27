@@ -5,7 +5,6 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include <semaphore>
 #include <vector>
 
 // Constructor
@@ -84,7 +83,7 @@ void GUI::ProcessInput() {
         // TODO: Implement different Algorithm buttons
         else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
             // Detach search algorithm as an own thread
-            std::thread search(&GUI::Dijkstra, this);
+            std::thread search(&GUI::AStar, this);
             search.detach();
         }
         else {
@@ -99,6 +98,10 @@ void GUI::ProcessInput() {
             if (CheckCollisionPointRec(this->mousePosition, col.rec)) {
                 // Use left mouse button to place obstacles or drag and drop start and goal
                 if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+                    if (this->searchExecuted) {
+                        this->PurgeGrid();
+                        this->searchExecuted = false;
+                    }
                     if (this->startButtonDrag) {
                         if (col.isEmpty()) {
                             col.tileState = TileState::start;
@@ -179,7 +182,7 @@ void GUI::GenerateOutput() {
                     DrawRectangleRec(col.rec, Fade(DARKBLUE, 0.3f));
                 }
                 else if (col.isPath()) {
-                    DrawRectangleRec(col.rec, YELLOW);
+                    DrawRectangleRec(col.rec, Fade(GOLD, 0.5f));
                 }
                 else {
                     DrawRectangleRec(col.rec, Fade(LIGHTGRAY, 0.5f));
@@ -194,6 +197,17 @@ void GUI::ClearGrid() {
     for (auto& row : this->grid) {
         for (auto& col : row) {
             if (!col.isStart() && !col.isGoal()) {
+                col.tileState = TileState::empty;
+            }
+        }
+    }
+    this->searchExecuted = false;
+}
+
+void GUI::PurgeGrid() {
+    for (auto& row : this->grid) {
+        for (auto& col : row) {
+            if (col.isPath() || col.isVisited()) {
                 col.tileState = TileState::empty;
             }
         }
@@ -285,7 +299,7 @@ void GUI::Bfs() {
         Coordinates current = frontier.front();
         frontier.pop();
         if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
-            std::cout << "Bfs Path found!\n";
+            // std::cout << "Bfs Path found!\n";
             this->printPath();
             break;
         }
@@ -307,6 +321,7 @@ void GUI::Bfs() {
     // Release GUI processing
     this->clearContainers();
     this->isGUIBusy = false;
+    this->searchExecuted = true;
 }
 
 void GUI::Dijkstra() {
@@ -326,7 +341,7 @@ void GUI::Dijkstra() {
     while (!frontier.empty()) {
         Coordinates current = frontier.get();
         if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
-            std::cout << "Dijkstra path found!\n";
+            // std::cout << "Dijkstra path found!\n";
             this->printPath();
             break;
         }
@@ -350,4 +365,50 @@ void GUI::Dijkstra() {
     // Release GUI processing
     this->clearContainers();
     this->isGUIBusy = false;
+    this->searchExecuted = true;
+}
+
+void GUI::AStar() {
+    // Lock GUI inputs
+    this->isGUIBusy = true;
+    std::mutex mut;
+
+    this->clearContainers();
+    this->collectObstacles();
+
+    PrioriyQueue<Coordinates, double> frontier;
+    frontier.put(Coordinates{this->startPtr->x, this->startPtr->y}, 0);
+
+    this->cameFrom[Coordinates{this->startPtr->x, this->startPtr->y}] = Coordinates{this->startPtr->x, this->startPtr->y};
+    this->costSoFar[Coordinates{this->startPtr->x, this->startPtr->y}] = 0;
+
+    while (!frontier.empty()) {
+        Coordinates current = frontier.get();
+        if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
+            // std::cout << "AStar path found!\n";
+            this->printPath();
+            break;
+        }
+        for (Coordinates next : this->neighbors(current)) {
+            double newCost = this->costSoFar[current] + this->cost(current, next);
+            if (this->costSoFar.find(next) == this->costSoFar.end() || newCost < this->costSoFar[next]) {
+                this->costSoFar[next] = newCost;
+                double priority = newCost + this->heuristic(next, Coordinates{this->goalPtr->x, this->goalPtr->y});
+                frontier.put(next, priority);
+                this->cameFrom[next] = current;
+                mut.lock();
+                    if (this->grid[next.y][next.x].isGoal())
+                        this->goalPtr->tileState = TileState::goal;
+                    else
+                        this->grid[next.y][next.x].tileState = TileState::visited;
+                mut.unlock();
+                std::this_thread::sleep_for(std::chrono::milliseconds(3));
+            }
+        }
+    }
+    this->goalPtr->tileState = TileState::goal;
+    // Release GUI processing
+    this->clearContainers();
+    this->isGUIBusy = false;
+    this->searchExecuted = true;
 }

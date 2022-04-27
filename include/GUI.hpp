@@ -35,10 +35,11 @@ public:
     ~GUI();
     void RunLoop();
 private:
-    // ryalib related methods
+    // GUI related methods
     void ProcessInput();
     void GenerateOutput();
     void ClearGrid();
+    void PurgeGrid();
 
 
     // Search related methods and attributes
