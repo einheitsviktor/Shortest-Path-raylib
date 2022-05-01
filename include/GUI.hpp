@@ -40,6 +40,7 @@ private:
     void GenerateOutput();
     void ClearGrid();
     void PurgeGrid();
+    Rectangle getTileToOutline();
 
 
     // Search related methods and attributes
@@ -69,7 +70,7 @@ private:
 
     Algorithm algorithm;
 
-    // raylib related attributes
+    // GUI related attributes
     Vector2 mousePosition;
     TileState originState;
     Tile* startPtr;
@@ -80,6 +81,9 @@ private:
     bool searchExecuted;
     bool isGUIBusy;
 
+    Tile BfsButton;         // TODO
+    Tile DijkstraButton;    // TODO
+    Tile AStarButton;       // TODO
     Tile clearButton;
     Tile searchButton;
 
