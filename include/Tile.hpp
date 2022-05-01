@@ -5,7 +5,6 @@
 #include <tuple>
 
 enum class TileState {
-    none,
     empty,
     obstacle,
     visited,
@@ -41,6 +40,22 @@ struct Tile {
     bool isStart()    const { return this->tileState == TileState::start; }
     bool isGoal()     const { return this->tileState == TileState::goal; }
     bool isPath()     const { return this->tileState == TileState::path; }
+
+    bool buttonNormal()  const { return this->buttonState == ButtonState::normal; }
+    bool buttonHover()   const { return this->buttonState == ButtonState::mouse_hover; }
+    bool buttonPressed() const { return this->buttonState == ButtonState::pressed; }
+    
+    // Setter
+    void setTileEmpty() { this->tileState = TileState::empty; }
+    void setTileObstacle() { this->tileState = TileState::obstacle; }
+    void setTileVisited() { this->tileState = TileState::visited; }
+    void setTileStart() { this->tileState = TileState::start; }
+    void setTileGoal() { this->tileState = TileState::goal; }
+    void setTilePath() { this->tileState = TileState::path; }
+
+    void setButtonNormal() { this->buttonState = ButtonState::normal; }
+    void setButtonHover() { this->buttonState = ButtonState::mouse_hover; }
+    void setButtonPressed() { this->buttonState = ButtonState::pressed; }
 };
 
 struct Coordinates {

@@ -11,7 +11,7 @@
 GUI::GUI()
     : algorithm(Algorithm::Bfs)
     , mousePosition(Vector2{ 0.0f, 0.0f })
-    , originState(TileState::none)
+    , originState(TileState::empty)
     , startPtr(nullptr)
     , goalPtr(nullptr)
     , startButtonDrag(false)
@@ -33,8 +33,8 @@ GUI::GUI()
         this->grid[y][x] = Tile(y, x, recY, recX, TILE_WIDTH, TILE_WIDTH);
     }
     //         y  x
-    this->grid[3][3].tileState   = TileState::start;
-    this->grid[21][46].tileState = TileState::goal;
+    this->grid[3][3].setTileStart();
+    this->grid[21][46].setTileGoal();
     this->startPtr = &this->grid[3][3];
     this->goalPtr = &this->grid[21][46];
 
@@ -46,8 +46,8 @@ GUI::GUI()
     this->DijkstraButton =  Tile{0, 0, 50, djk, 110, 40};
     this->AStarButton =     Tile{0, 0, 50, ast, 110, 40};
 
-    this->clearButton =     Tile(0, 0, 50, 1040, 100, 40);
-    this->searchButton =    Tile(0, 0, 50, 1150, 120, 40);
+    this->clearButton =     Tile(0, 0, 50, 1090, 100, 40);
+    this->searchButton =    Tile(0, 0, 50, 1200, 120, 40);
 }
 
 // Destructor
@@ -68,75 +68,61 @@ void GUI::ProcessInput() {
 
     // Process algorithm buttons
     if (CheckCollisionPointRec(this->mousePosition, this->BfsButton.rec)) {
-        this->BfsButton.buttonState = ButtonState::mouse_hover;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            this->BfsButton.buttonState = ButtonState::pressed;
-        }
-        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        this->BfsButton.setButtonHover();
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            this->BfsButton.setButtonPressed();
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
             this->algorithm = Algorithm::Bfs;
-        }
-        else {
-            this->BfsButton.buttonState = ButtonState::mouse_hover;
-        }
+        else
+            this->BfsButton.setButtonHover();
     }
-    else this->BfsButton.buttonState = ButtonState::normal;
+    else this->BfsButton.setButtonNormal();
     
     // Process Dijkstra button
     if (CheckCollisionPointRec(this->mousePosition, this->DijkstraButton.rec)) {
-        this->DijkstraButton.buttonState = ButtonState::mouse_hover;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            this->DijkstraButton.buttonState = ButtonState::pressed;
-        }
-        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        this->DijkstraButton.setButtonHover();
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            this->DijkstraButton.setButtonPressed();
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
             this->algorithm = Algorithm::Dijkstra;
-        }
-        else {
-            this->DijkstraButton.buttonState = ButtonState::mouse_hover;
-        }
+        else
+            this->DijkstraButton.setButtonHover();
     }
-    else this->DijkstraButton.buttonState = ButtonState::normal;
+    else this->DijkstraButton.setButtonNormal();
 
     // Process AStar button
     if (CheckCollisionPointRec(this->mousePosition, this->AStarButton.rec)) {
-        this->AStarButton.buttonState = ButtonState::mouse_hover;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            this->AStarButton.buttonState = ButtonState::pressed;
-        }
-        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        this->AStarButton.setButtonHover();
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            this->AStarButton.setButtonPressed();
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
             this->algorithm = Algorithm::AStar;
-        }
-        else {
-            this->AStarButton.buttonState = ButtonState::mouse_hover;
-        }
+        else
+            this->AStarButton.setButtonHover();
     }
-    else this->AStarButton.buttonState = ButtonState::normal;
+    else this->AStarButton.setButtonNormal();
 
     // Process Clear button
     if (CheckCollisionPointRec(this->mousePosition, this->clearButton.rec)) {
-        this->clearButton.buttonState = ButtonState::mouse_hover;
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            this->clearButton.buttonState = ButtonState::pressed;
-        }
-        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        this->clearButton.setButtonHover();
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            this->clearButton.setButtonPressed();
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
             this->ClearGrid();
-        }
-        else {
-            this->clearButton.buttonState = ButtonState::mouse_hover;
-        }
+        else
+            this->clearButton.setButtonHover();
     }
-    else this->clearButton.buttonState = ButtonState::normal;
+    else this->clearButton.setButtonNormal();
 
     // Process Sesarch button
     if (CheckCollisionPointRec(this->mousePosition, this->searchButton.rec)) {
-        this->searchButton.buttonState = ButtonState::mouse_hover;
+        this->searchButton.setButtonHover();
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            this->searchButton.buttonState = ButtonState::pressed;
+            this->searchButton.setButtonPressed();
         }
-        // TODO: Implement different Algorithm buttons
         else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            if (this->searchExecuted) {
+            if (this->searchExecuted)
                 this->PurgeGrid();
-            }
             // Detach search algorithm as an own thread
             if (this->algorithm == Algorithm::Bfs) {
                 std::thread search(&GUI::Bfs, this);
@@ -152,10 +138,10 @@ void GUI::ProcessInput() {
             }
         }
         else {
-            this->searchButton.buttonState = ButtonState::mouse_hover;
+            this->searchButton.setButtonHover();
         }
     }
-    else this->searchButton.buttonState = ButtonState::normal;
+    else this->searchButton.setButtonNormal();
     
     // Process grid
     for (auto& row : this->grid) {
@@ -169,18 +155,18 @@ void GUI::ProcessInput() {
                     }
                     if (this->startButtonDrag) {
                         if (col.isEmpty()) {
-                            col.tileState = TileState::start;
-                            this->startPtr->tileState = TileState::empty;
+                            col.setTileStart();
+                            this->startPtr->setTileEmpty();
                             this->startPtr = &col;
                         }
                     } else if (this->goalButtonDrag) {
                         if (col.isEmpty()) {
-                            col.tileState = TileState::goal;
-                            this->goalPtr->tileState = TileState::empty;
+                            col.setTileGoal();
+                            this->goalPtr->setTileEmpty();
                             this->goalPtr =  &col;
                         }
                     } else if (col.isEmpty()) {
-                        col.tileState = TileState::obstacle;
+                        col.setTileObstacle();
                     } else if (col.isStart()) {
                         this->startButtonDrag = true;
                     } else if (col.isGoal()) {
@@ -195,7 +181,7 @@ void GUI::ProcessInput() {
                             this->PurgeGrid();
                             this->searchExecuted = false;
                         }
-                        col.tileState = TileState::empty;
+                        col.setTileEmpty();
                     }
                 }
             }
@@ -210,26 +196,26 @@ void GUI::ProcessInput() {
 
 void GUI::GenerateOutput() {
     // Offset for text in buttons
-    static int bfsX = this->BfsButton.rec.x + 40, bfsY = this->BfsButton.rec.y + 10;
+    static int bfsX = this->BfsButton.rec.x + 40,     bfsY = this->BfsButton.rec.y + 10;
     static int djkX = this->DijkstraButton.rec.x + 8, djkY = this->DijkstraButton.rec.y + 10;
-    static int astX = this->AStarButton.rec.x + 23, astY = this->AStarButton.rec.y + 10;
+    static int astX = this->AStarButton.rec.x + 23,   astY = this->AStarButton.rec.y + 10;
     static int fontSize = 24;
 
     BeginDrawing();
     {
         ClearBackground(RAYWHITE);
 
-        // Draw outline box
+        // Draw outline box around algorithm buttons
         DrawRectangleLinesEx(this->getTileToOutline(), 2.0f, BLACK);
 
         // Draw Bfs button
         DrawRectangleRec(this->BfsButton.rec, Fade(VIOLET, 0.2f));
         DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
-        if (this->BfsButton.buttonState == ButtonState::pressed) {
+        if (this->BfsButton.buttonPressed()) {
             DrawRectangleRec(this->BfsButton.rec, Fade(VIOLET, 0.4f));
             DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
         }
-        else if (this->BfsButton.buttonState == ButtonState::mouse_hover) {
+        else if (this->BfsButton.buttonHover()) {
             DrawRectangleRec(this->BfsButton.rec, Fade(VIOLET, 0.4f));
             DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
         }
@@ -237,10 +223,10 @@ void GUI::GenerateOutput() {
         // Draw Dijkstra button
         DrawRectangleRec(this->DijkstraButton.rec, Fade(VIOLET, 0.2f));
         DrawText("Dijkstra", djkX, djkY, fontSize, BLACK);
-        if (this->DijkstraButton.buttonState == ButtonState::pressed) {
+        if (this->DijkstraButton.buttonPressed()) {
             DrawRectangleRec(this->DijkstraButton.rec, Fade(VIOLET, 0.4f));
             DrawText("Dijkstra", djkX, djkY, fontSize, BLACK);
-        } else if (this->DijkstraButton.buttonState == ButtonState::mouse_hover) {
+        } else if (this->DijkstraButton.buttonHover()) {
             DrawRectangleRec(this->DijkstraButton.rec, Fade(VIOLET, 0.4f));
             DrawText("Dijkstra", djkX, djkY, fontSize, BLACK);
         }
@@ -248,60 +234,56 @@ void GUI::GenerateOutput() {
         // Draw AStar button
         DrawRectangleRec(this->AStarButton.rec, Fade(VIOLET, 0.2f));
         DrawText("AStar", astX, astY, fontSize, BLACK);
-        if (this->AStarButton.buttonState == ButtonState::pressed) {
+        if (this->AStarButton.buttonPressed()) {
             DrawRectangleRec(this->AStarButton.rec, Fade(VIOLET, 0.4f));
             DrawText("AStar", astX, astY, fontSize, BLACK);
-        } else if (this->AStarButton.buttonState == ButtonState::mouse_hover) {
+        } else if (this->AStarButton.buttonHover()) {
             DrawRectangleRec(this->AStarButton.rec, Fade(VIOLET, 0.4f));
             DrawText("AStar", astX, astY, fontSize, BLACK);
         }
 
-
         // Draw clearButton
         DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.5f));
-        DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, 24, BLACK);
-        if (this->clearButton.buttonState == ButtonState::pressed) {
+        DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, fontSize, BLACK);
+        if (this->clearButton.buttonPressed()) {
             DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.4f));
-            DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, 24, BLACK);
-        } else if (this->clearButton.buttonState == ButtonState::mouse_hover) {
+            DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, fontSize, BLACK);
+        } else if (this->clearButton.buttonHover()) {
             DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.41f));
-            DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, 24, BLACK);
+            DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, fontSize, BLACK);
         }
 
         // Draw searchButton
         DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.5f));
-        DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
-        if (this->searchButton.buttonState == ButtonState::pressed) {
+        DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, fontSize, BLACK);
+        if (this->searchButton.buttonPressed()) {
             DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 1.0f));
-            DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
-        } else if (this->searchButton.buttonState == ButtonState::mouse_hover) {
+            DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, fontSize, BLACK);
+        } else if (this->searchButton.buttonHover()) {
             DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.5f));
-            DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, 24, BLACK);
+            DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, fontSize, BLACK);
         }
-
 
 
         // Draw grid
         for (const auto& row : this->grid) {
             for (const auto& col : row) {
-                if (col.isObstacle()) {
+                if (col.isObstacle())
                     DrawRectangleRec(col.rec, Fade(BLACK, 0.7f));
-                } else if (col.isStart()) {
+                else if (col.isStart()) {
                     DrawRectangleRec(col.rec, GREEN);
-                    DrawText("S", col.rec.x+5, col.rec.y+2, 24, DARKBROWN);
-                } else if (col.isGoal()) {
+                    DrawText("S", col.rec.x+5, col.rec.y+2, fontSize, DARKBROWN);
+                }
+                else if (col.isGoal()) {
                     DrawRectangleRec(col.rec, RED);
-                    DrawText("G", col.rec.x+5, col.rec.y+2, 24, BLACK);
+                    DrawText("G", col.rec.x+5, col.rec.y+2, fontSize, BLACK);
                 } 
-                else if (col.isVisited()) {
+                else if (col.isVisited())
                     DrawRectangleRec(col.rec, Fade(DARKBLUE, 0.3f));
-                }
-                else if (col.isPath()) {
+                else if (col.isPath())
                     DrawRectangleRec(col.rec, Fade(GOLD, 0.5f));
-                }
-                else {
+                else
                     DrawRectangleRec(col.rec, Fade(LIGHTGRAY, 0.5f));
-                }
             }
         }
     }
@@ -312,7 +294,7 @@ void GUI::ClearGrid() {
     for (auto& row : this->grid) {
         for (auto& col : row) {
             if (!col.isStart() && !col.isGoal()) {
-                col.tileState = TileState::empty;
+                col.setTileEmpty();
             }
         }
     }
@@ -323,7 +305,7 @@ void GUI::PurgeGrid() {
     for (auto& row : this->grid) {
         for (auto& col : row) {
             if (col.isPath() || col.isVisited()) {
-                col.tileState = TileState::empty;
+                col.setTileEmpty();
             }
         }
     }
@@ -354,18 +336,16 @@ std::vector<Coordinates> GUI::neighbors(Coordinates& id) const {
         }
     }
     // Nudge directions for "prettier" paths
-    if ((id.x + id.y) % 2 == 0) {
+    if ((id.x + id.y) % 2 == 0)
         std::reverse(ret.begin(), ret.end());
-    }
     return ret;
 }
 
 void GUI::collectObstacles() {
     for (const auto& row : this->grid) {
         for (const auto& col : row) {
-            if (col.isObstacle()) {
+            if (col.isObstacle())
                 this->obstacles.insert(Coordinates{col.x, col.y});
-            }
         }
     }
 }
@@ -386,7 +366,7 @@ void GUI::printPath() {
     }
     auto rit = path.rbegin();
     for (; rit != path.rend(); ++rit) {
-        this->grid[rit->y][rit->x].tileState = TileState::path;
+        this->grid[rit->y][rit->x].setTilePath();
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }
@@ -421,7 +401,6 @@ void GUI::Bfs() {
         Coordinates current = frontier.front();
         frontier.pop();
         if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
-            // std::cout << "Bfs Path found!\n";
             this->printPath();
             break;
         }
@@ -431,15 +410,15 @@ void GUI::Bfs() {
                 this->cameFrom[next] = current;
                 mut.lock();
                     if (this->grid[next.y][next.x].isGoal())
-                        this->goalPtr->tileState = TileState::goal;
+                        this->goalPtr->setTileGoal();
                     else
-                        this->grid[next.y][next.x].tileState = TileState::visited;
+                        this->grid[next.y][next.x].setTileVisited();
                 mut.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(3));
             }
         }
     }
-    this->goalPtr->tileState = TileState::goal;
+    this->goalPtr->setTileGoal();
     // Release GUI processing
     this->clearContainers();
     this->isGUIBusy = false;
@@ -463,7 +442,6 @@ void GUI::Dijkstra() {
     while (!frontier.empty()) {
         Coordinates current = frontier.get();
         if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
-            // std::cout << "Dijkstra path found!\n";
             this->printPath();
             break;
         }
@@ -475,15 +453,15 @@ void GUI::Dijkstra() {
                 frontier.put(next, newCost);
                 mut.lock();
                     if (this->grid[next.y][next.x].isGoal())
-                        this->goalPtr->tileState = TileState::goal;
+                        this->goalPtr->setTileGoal();
                     else
-                        this->grid[next.y][next.x].tileState = TileState::visited;
+                        this->grid[next.y][next.x].setTileVisited();
                 mut.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(3));
             }
         }
     }
-    this->goalPtr->tileState = TileState::goal;
+    this->goalPtr->setTileGoal();
     // Release GUI processing
     this->clearContainers();
     this->isGUIBusy = false;
@@ -507,7 +485,6 @@ void GUI::AStar() {
     while (!frontier.empty()) {
         Coordinates current = frontier.get();
         if (current == Coordinates{this->goalPtr->x, this->goalPtr->y}) {
-            // std::cout << "AStar path found!\n";
             this->printPath();
             break;
         }
@@ -520,15 +497,15 @@ void GUI::AStar() {
                 this->cameFrom[next] = current;
                 mut.lock();
                     if (this->grid[next.y][next.x].isGoal())
-                        this->goalPtr->tileState = TileState::goal;
+                        this->goalPtr->setTileGoal();
                     else
-                        this->grid[next.y][next.x].tileState = TileState::visited;
+                        this->grid[next.y][next.x].setTileVisited();
                 mut.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
         }
     }
-    this->goalPtr->tileState = TileState::goal;
+    this->goalPtr->setTileGoal();
     // Release GUI processing
     this->clearContainers();
     this->isGUIBusy = false;

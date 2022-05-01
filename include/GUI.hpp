@@ -81,9 +81,9 @@ private:
     bool searchExecuted;
     bool isGUIBusy;
 
-    Tile BfsButton;         // TODO
-    Tile DijkstraButton;    // TODO
-    Tile AStarButton;       // TODO
+    Tile BfsButton;
+    Tile DijkstraButton;
+    Tile AStarButton;
     Tile clearButton;
     Tile searchButton;
 
