@@ -39,7 +39,15 @@ GUI::GUI()
     this->goalPtr = &this->grid[21][46];
 
     // Initialize upper buttons
-    int bfs = 650;
+    int p1 = 40;
+    int p2 = p1 + 130;
+    int p3 = p2 + 130;
+    this->presetButton1 = Tile{0, 0, 50, p1, 120, 40};
+    this->presetButton2 = Tile{0, 0, 50, p2, 120, 40};
+    this->presetButton3 = Tile{0, 0, 50, p3, 120, 40};
+
+
+    int bfs = 700;
     int djk = bfs + 120;
     int ast = djk + 120;
     this->BfsButton =       Tile{0, 0, 50, bfs, 110, 40};
@@ -65,6 +73,61 @@ void GUI::ProcessInput() {
     // Do not accecpt input if a search is currently executing
     if (this->isGUIBusy) return;
     this->mousePosition = GetMousePosition();
+
+    // Process preset buttons
+    if (CheckCollisionPointRec(this->mousePosition, this->presetButton1.rec)) {
+        this->presetButton1.setButtonHover();
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            this->presetButton1.setButtonPressed();
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            this->startPtr->setTileEmpty();
+            this->goalPtr->setTileEmpty();
+            this->printPreset(preset1);
+            this->grid[14][14].setTileStart();
+            this->startPtr = &this->grid[14][14];
+            this->grid[1][43].setTileGoal();
+            this->goalPtr = &this->grid[1][43];
+        }
+        else
+            this->presetButton1.setButtonHover();
+    }
+    else this->presetButton1.setButtonNormal();
+
+    if (CheckCollisionPointRec(this->mousePosition, this->presetButton2.rec)) {
+        this->presetButton2.setButtonHover();
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            this->presetButton2.setButtonPressed();
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            this->startPtr->setTileEmpty();
+            this->goalPtr->setTileEmpty();
+            this->printPreset(preset2);
+            this->grid[18][12].setTileStart();
+            this->startPtr = &this->grid[18][12];
+            this->grid[5][27].setTileGoal();
+            this->goalPtr = &this->grid[5][27];
+        }
+        else
+            this->presetButton2.setButtonHover();
+    }
+    else this->presetButton2.setButtonNormal();
+
+    if (CheckCollisionPointRec(this->mousePosition, this->presetButton3.rec)) {
+        this->presetButton3.setButtonHover();
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            this->presetButton3.setButtonPressed();
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            this->startPtr->setTileEmpty();
+            this->goalPtr->setTileEmpty();
+            this->printPreset(preset3);
+            this->grid[11][14].setTileStart();
+            this->startPtr = &this->grid[11][14];
+            this->grid[11][34].setTileGoal();
+            this->goalPtr = &this->grid[11][34];
+        }
+        else
+            this->presetButton3.setButtonHover();
+    }
+    else this->presetButton3.setButtonNormal();
 
     // Process algorithm buttons
     if (CheckCollisionPointRec(this->mousePosition, this->BfsButton.rec)) {
@@ -196,6 +259,10 @@ void GUI::ProcessInput() {
 
 void GUI::GenerateOutput() {
     // Offset for text in buttons
+    static int p1X = this->presetButton1.rec.x + 10, p1Y = this->presetButton1.rec.y + 10;
+    static int p2X = this->presetButton2.rec.x + 10, p2Y = this->presetButton2.rec.y + 10;
+    static int p3X = this->presetButton3.rec.x + 10, p3Y = this->presetButton3.rec.y + 10;
+
     static int bfsX = this->BfsButton.rec.x + 40,     bfsY = this->BfsButton.rec.y + 10;
     static int djkX = this->DijkstraButton.rec.x + 8, djkY = this->DijkstraButton.rec.y + 10;
     static int astX = this->AStarButton.rec.x + 23,   astY = this->AStarButton.rec.y + 10;
@@ -205,30 +272,64 @@ void GUI::GenerateOutput() {
     {
         ClearBackground(RAYWHITE);
 
+        //TODO: helper
+        if (IsKeyPressed(KEY_P)) this->printObstacles();
+
+        // Draw preset buttons
+        DrawRectangleRec(this->presetButton1.rec, Fade(BEIGE, 0.4f));
+        DrawText("Preset 1", p1X, p1Y, fontSize, BLACK);
+        if (this->presetButton1.buttonPressed()) {
+            DrawRectangleRec(this->presetButton1.rec, Fade(BEIGE, 1.0f));
+            DrawText("Preset 1", p1X, p1Y, fontSize, BLACK);
+        } else if (this->presetButton1.buttonHover()) {
+            DrawRectangleRec(this->presetButton1.rec, Fade(BEIGE, 0.5f));
+            DrawText("Preset 1", p1X, p1Y, fontSize, BLACK);
+        }
+
+        DrawRectangleRec(this->presetButton2.rec, Fade(BEIGE, 0.4f));
+        DrawText("Preset 2", p2X, p2Y, fontSize, BLACK);
+        if (this->presetButton2.buttonPressed()) {
+            DrawRectangleRec(this->presetButton2.rec, Fade(BEIGE, 1.0f));
+            DrawText("Preset 2", p2X, p2Y, fontSize, BLACK);
+        } else if (this->presetButton2.buttonHover()) {
+            DrawRectangleRec(this->presetButton2.rec, Fade(BEIGE, 0.5f));
+            DrawText("Preset 2", p2X, p2Y, fontSize, BLACK);
+        }
+
+        DrawRectangleRec(this->presetButton3.rec, Fade(BEIGE, 0.4f));
+        DrawText("Preset 3", p3X, p3Y, fontSize, BLACK);
+        if (this->presetButton3.buttonPressed()) {
+            DrawRectangleRec(this->presetButton3.rec, Fade(BEIGE, 1.0f));
+            DrawText("Preset 3", p3X, p3Y, fontSize, BLACK);
+        } else if (this->presetButton3.buttonHover()) {
+            DrawRectangleRec(this->presetButton3.rec, Fade(BEIGE, 0.5f));
+            DrawText("Preset 3", p3X, p3Y, fontSize, BLACK);
+        }
+
         // Draw outline box around algorithm buttons
         DrawRectangleLinesEx(this->getTileToOutline(), 2.0f, BLACK);
-
         // Draw Bfs button
         DrawRectangleRec(this->BfsButton.rec, Fade(VIOLET, 0.2f));
         DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
         if (this->BfsButton.buttonPressed()) {
             DrawRectangleRec(this->BfsButton.rec, Fade(VIOLET, 0.4f));
-            DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
+            // DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
         }
         else if (this->BfsButton.buttonHover()) {
             DrawRectangleRec(this->BfsButton.rec, Fade(VIOLET, 0.4f));
-            DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
+            // DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
         }
+        // DrawText("Bfs", bfsX, bfsY, fontSize, BLACK);
 
         // Draw Dijkstra button
         DrawRectangleRec(this->DijkstraButton.rec, Fade(VIOLET, 0.2f));
         DrawText("Dijkstra", djkX, djkY, fontSize, BLACK);
         if (this->DijkstraButton.buttonPressed()) {
             DrawRectangleRec(this->DijkstraButton.rec, Fade(VIOLET, 0.4f));
-            DrawText("Dijkstra", djkX, djkY, fontSize, BLACK);
+            // DrawText("Dijkstra", djkX, djkY, fontSize, BLACK);
         } else if (this->DijkstraButton.buttonHover()) {
             DrawRectangleRec(this->DijkstraButton.rec, Fade(VIOLET, 0.4f));
-            DrawText("Dijkstra", djkX, djkY, fontSize, BLACK);
+            // DrawText("Dijkstra", djkX, djkY, fontSize, BLACK);
         }
 
         // Draw AStar button
@@ -236,25 +337,25 @@ void GUI::GenerateOutput() {
         DrawText("AStar", astX, astY, fontSize, BLACK);
         if (this->AStarButton.buttonPressed()) {
             DrawRectangleRec(this->AStarButton.rec, Fade(VIOLET, 0.4f));
-            DrawText("AStar", astX, astY, fontSize, BLACK);
+            // DrawText("AStar", astX, astY, fontSize, BLACK);
         } else if (this->AStarButton.buttonHover()) {
             DrawRectangleRec(this->AStarButton.rec, Fade(VIOLET, 0.4f));
-            DrawText("AStar", astX, astY, fontSize, BLACK);
+            // DrawText("AStar", astX, astY, fontSize, BLACK);
         }
 
         // Draw clearButton
-        DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.5f));
+        DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.4f));
         DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, fontSize, BLACK);
         if (this->clearButton.buttonPressed()) {
-            DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.4f));
+            DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 1.0f));
             DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, fontSize, BLACK);
         } else if (this->clearButton.buttonHover()) {
-            DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.41f));
+            DrawRectangleRec(this->clearButton.rec, Fade(SKYBLUE, 0.5f));
             DrawText("Clear", this->clearButton.rec.x+20, this->clearButton.rec.y+10, fontSize, BLACK);
         }
 
         // Draw searchButton
-        DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.5f));
+        DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 0.4f));
         DrawText("Search", this->searchButton.rec.x+20, this->searchButton.rec.y+10, fontSize, BLACK);
         if (this->searchButton.buttonPressed()) {
             DrawRectangleRec(this->searchButton.rec, Fade(DARKGREEN, 1.0f));
@@ -269,7 +370,7 @@ void GUI::GenerateOutput() {
         for (const auto& row : this->grid) {
             for (const auto& col : row) {
                 if (col.isObstacle())
-                    DrawRectangleRec(col.rec, Fade(BLACK, 0.7f));
+                    DrawRectangleRec(col.rec, Fade(BLACK, 1.0f));
                 else if (col.isStart()) {
                     DrawRectangleRec(col.rec, GREEN);
                     DrawText("S", col.rec.x+5, col.rec.y+2, fontSize, DARKBROWN);
@@ -316,6 +417,13 @@ Rectangle GUI::getTileToOutline() {
     if (this->algorithm == Algorithm::Bfs) return this->BfsButton.rec;
     else if (this->algorithm == Algorithm::Dijkstra) return this->DijkstraButton.rec;
     else return this->AStarButton.rec;
+}
+
+void GUI::printPreset(const std::vector<std::vector<int>>& vec) {
+    this->ClearGrid();
+    for (const auto& v : vec) {
+        this->grid[v[0]][v[1]].setTileObstacle();
+    }
 }
 
 // Search algorithm related code
