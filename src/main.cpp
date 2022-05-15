@@ -1,7 +1,8 @@
-#include "GUI.hpp"
+#include <iostream>
+
+#include "gui.hpp"
 
 int main() {
-    GUI gui; 
-
+    Gui gui;
     gui.RunLoop();
 }

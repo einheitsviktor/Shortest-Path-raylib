@@ -19,7 +19,8 @@ include_directories(include)
 add_executable(
     Shortest-Path-raylib
     src/main.cpp
-    src/GUI.cpp
+    src/gui.cpp
+    src/search.cpp
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 target_link_libraries(${PROJECT_NAME} PUBLIC raylib)
