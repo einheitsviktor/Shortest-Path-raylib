@@ -51,7 +51,7 @@ void Search::SetPath(std::vector<std::vector<Tile>>& grid, const Tile* start_ptr
     for (; rit != path.rend(); ++rit) {
         grid[rit->y][rit->x].SetTilePath();
         goal_ptr->SetTileGoal();
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
 }
 
@@ -71,7 +71,7 @@ double Search::Heuristic(const Coordinates& a, const Coordinates& b) {
 void Search::Bfs(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* goal_ptr, bool& gui_busy) {
     // Lock GUI inputs
     gui_busy = true;
-    ClearContainers();
+    // ClearContainers();
     CollectObstacles(grid);
 
     std::queue<Coordinates> frontier;
@@ -99,14 +99,14 @@ void Search::Bfs(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* go
         }
     }
     // Release GUI processing
-    ClearContainers();
+    // ClearContainers();
     gui_busy = false;
 }
 
 void Search::Dijkstra(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* goal_ptr, bool& gui_busy) {
     // Lock GUI inputs
     gui_busy = true;
-    ClearContainers();
+    // ClearContainers();
     CollectObstacles(grid);
 
     PrioriyQueue<Coordinates, double> frontier;
@@ -137,14 +137,14 @@ void Search::Dijkstra(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Til
         }
     }
     // Release GUI processing
-    ClearContainers();
+    // ClearContainers();
     gui_busy = false;
 }
 
 void Search::AStar(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* goal_ptr, bool& gui_busy) {
     // Lock GUI inputs
     gui_busy = true;
-    ClearContainers();
+    // ClearContainers();
     CollectObstacles(grid);
 
     PrioriyQueue<Coordinates, double> frontier;
@@ -176,6 +176,6 @@ void Search::AStar(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* 
         }
     }
     // Release GUI processing
-    ClearContainers();
+    // ClearContainers();
     gui_busy = false;
 }
