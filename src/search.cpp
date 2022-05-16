@@ -1,11 +1,5 @@
 #include "search.hpp"
 
-void Search::ClearContainers() {
-    obstacles_.clear();
-    came_from_.clear();
-    cost_so_far_.clear();
-}
-
 bool Search::InBounds(Coordinates& id, std::vector<std::vector<Tile>>& grid) const {
     return 0 <= id.x && id.x < grid[0].size() && 0 <= id.y && id.y < grid.size();
 }
@@ -71,7 +65,6 @@ double Search::Heuristic(const Coordinates& a, const Coordinates& b) {
 void Search::Bfs(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* goal_ptr, bool& gui_busy) {
     // Lock GUI inputs
     gui_busy = true;
-    // ClearContainers();
     CollectObstacles(grid);
 
     std::queue<Coordinates> frontier;
@@ -99,14 +92,12 @@ void Search::Bfs(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* go
         }
     }
     // Release GUI processing
-    // ClearContainers();
     gui_busy = false;
 }
 
 void Search::Dijkstra(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* goal_ptr, bool& gui_busy) {
     // Lock GUI inputs
     gui_busy = true;
-    // ClearContainers();
     CollectObstacles(grid);
 
     PrioriyQueue<Coordinates, double> frontier;
@@ -137,14 +128,12 @@ void Search::Dijkstra(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Til
         }
     }
     // Release GUI processing
-    // ClearContainers();
     gui_busy = false;
 }
 
 void Search::AStar(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* goal_ptr, bool& gui_busy) {
     // Lock GUI inputs
     gui_busy = true;
-    // ClearContainers();
     CollectObstacles(grid);
 
     PrioriyQueue<Coordinates, double> frontier;
@@ -176,6 +165,5 @@ void Search::AStar(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* 
         }
     }
     // Release GUI processing
-    // ClearContainers();
     gui_busy = false;
 }

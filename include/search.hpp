@@ -62,7 +62,6 @@ public:
     void AStar(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* goal_ptr, bool& gui_busy);
 
 private:
-    void ClearContainers();
     bool InBounds(Coordinates& id, std::vector<std::vector<Tile>>& grid) const;
     bool Passable(Coordinates& id) const;
     std::vector<Coordinates> Neighbors(Coordinates& id, std::vector<std::vector<Tile>>& grid) const;
