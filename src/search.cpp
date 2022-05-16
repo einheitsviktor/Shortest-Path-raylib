@@ -51,7 +51,7 @@ void Search::SetPath(std::vector<std::vector<Tile>>& grid, const Tile* start_ptr
     for (; rit != path.rend(); ++rit) {
         grid[rit->y][rit->x].SetTilePath();
         goal_ptr->SetTileGoal();
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
 }
 
