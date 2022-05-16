@@ -43,6 +43,7 @@ private:
     void GenerateActionButton(const Vector2& mouse_pos, const Tile* button, Color color);
 
     Search search_;
+    Font font_default_ = { 0 };
 
     Vector2 mouse_position_;
     TileState origin_state_;

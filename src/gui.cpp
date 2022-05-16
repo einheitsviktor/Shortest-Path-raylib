@@ -20,6 +20,17 @@ Gui::Gui()
     // Set GUI width and height
     InitWindow(kScreenWidth, kScreenHeight, "Shortest Path raylib");
 
+    // Default font generation from TTF font
+    unsigned int file_size = 0;
+    unsigned char* file_data = LoadFileData("../resources/anonymous_pro_bold.ttf", &file_size);
+    font_default_.baseSize = 24;
+    font_default_.glyphCount = 95;
+
+    font_default_.glyphs = LoadFontData(file_data, file_size, 24, nullptr, 95, FONT_DEFAULT);
+    Image atlas = GenImageFontAtlas(font_default_.glyphs, &font_default_.recs, 95, 16, 4, 0);
+    font_default_.texture = LoadTextureFromImage(atlas);
+    UnloadImage(atlas);
+
     // Initialize upper buttons
     const int y = 50;
     int p1 = 40;
@@ -32,12 +43,12 @@ Gui::Gui()
     int bfs = 700;
     int djk = bfs + 120;
     int ast = djk + 120;
-    bfs_button_ = Tile{0, 40, y, bfs, 110, 40, "Bfs"};
-    dijkstra_button_ = Tile{0, 8, y, djk, 110, 40, "Dijkstra"};
-    astar_button_ = Tile{0, 23, y, ast, 110, 40, "AStar"};
+    bfs_button_ = Tile{10, 40, y, bfs, 110, 40, "Bfs"};
+    dijkstra_button_ = Tile{10, 4, y, djk, 110, 40, "Dijkstra"};
+    astar_button_ = Tile{10, 23, y, ast, 110, 40, "AStar"};
 
-    clear_button_ = Tile(0, 0, y, 1090, 100, 40, "Clear");
-    search_button_ = Tile(0, 0, y, 1200, 120, 40, "Search");
+    clear_button_ = Tile(10, 20, y, 1090, 100, 40, "Clear");
+    search_button_ = Tile(10, 20, y, 1200, 120, 40, "Search");
 
     // Initialize grid
     for (int i = 0, max_tiles = kMaxTilesX * kMaxTilesY; i < max_tiles; ++i) {
@@ -54,6 +65,7 @@ Gui::Gui()
 }
 
 Gui::~Gui() {
+    UnloadFont(font_default_);
     CloseWindow();
 }
 
@@ -220,19 +232,22 @@ void Gui::ProcessInput() {
 
 void Gui::GeneratePresetButton(const Vector2& mouse_pos, const Tile* button) {
     DrawRectangleRec(button->rec, Fade(BEIGE, 0.4f));
-    DrawText(button->text.c_str(), button->rec.x + 10, button->rec.y + 10, button->font_size, BLACK);
+    DrawTextEx(font_default_, button->text.c_str(), Vector2{button->rec.x + 10, button->rec.y + 10}, button->font_size, 0, BLACK);
     if (button->IsButtonPressed()) {
         DrawRectangleRec(button->rec, Fade(BEIGE, 1.0f));
-        DrawText(button->text.c_str(), button->rec.x + 10, button->rec.y + 10, button->font_size, BLACK);
+        DrawTextEx(font_default_, button->text.c_str(), Vector2{button->rec.x + 10, button->rec.y + 10}, button->font_size, 0,
+                   BLACK);
     } else if (button->IsButtonHover()) {
         DrawRectangleRec(button->rec, Fade(BEIGE, 0.5f));
-        DrawText(button->text.c_str(), button->rec.x + 10, button->rec.y + 10, button->font_size, BLACK);
+        DrawTextEx(font_default_, button->text.c_str(), Vector2{button->rec.x + 10, button->rec.y + 10}, button->font_size, 0,
+                   BLACK);
     }
 }
 
 void Gui::GenerateAlgorithmButton(const Vector2& mouse_pos, const Tile* button) {
     DrawRectangleRec(button->rec, Fade(VIOLET, 0.2f));
-    DrawText(button->text.c_str(), button->rec.x + button->x, button->rec.y + 10, button->font_size, BLACK);
+    DrawTextEx(font_default_, button->text.c_str(), Vector2{button->rec.x + button->x, button->rec.y + button->y},
+               button->font_size, 0, BLACK);
     if (button->IsButtonPressed() || button->IsButtonHover()) {
         DrawRectangleRec(button->rec, Fade(VIOLET, 0.4f));
     }
@@ -240,13 +255,16 @@ void Gui::GenerateAlgorithmButton(const Vector2& mouse_pos, const Tile* button) 
 
 void Gui::GenerateActionButton(const Vector2& mouse_pos, const Tile* button, Color color) {
     DrawRectangleRec(button->rec, Fade(color, 0.4f));
-    DrawText(button->text.c_str(), button->rec.x + 20, button->rec.y + 10, button->font_size, BLACK);
+    DrawTextEx(font_default_, button->text.c_str(), Vector2{button->rec.x + button->x, button->rec.y + button->y},
+               button->font_size, 0, BLACK);
     if (button->IsButtonPressed()) {
         DrawRectangleRec(button->rec, Fade(color, 1.0f));
-        DrawText(button->text.c_str(), button->rec.x + 20, button->rec.y + 10, button->font_size, BLACK);
+        DrawTextEx(font_default_, button->text.c_str(), Vector2{button->rec.x + button->x, button->rec.y + button->y},
+                   button->font_size, 0, BLACK);
     } else if (button->IsButtonHover()) {
         DrawRectangleRec(button->rec, Fade(color, 0.5f));
-        DrawText(button->text.c_str(), button->rec.x + 20, button->rec.y + 10, button->font_size, BLACK);
+        DrawTextEx(font_default_, button->text.c_str(), Vector2{button->rec.x + button->x, button->rec.y + button->y},
+                   button->font_size, 0, BLACK);
     }
 }
 
@@ -282,11 +300,11 @@ void Gui::GenerateOutput() {
                 if (tile.IsTileObstacle()) {
                     DrawRectangleRec(tile.rec, Fade(BLACK, 1.0f));
                 } else if (tile.IsTileStart()) {
-                    DrawRectangleRec(tile.rec, GREEN);
-                    DrawText("S", tile.rec.x + 5, tile.rec.y + 2, tile.font_size, DARKBROWN);
+                    DrawRectangleRec(tile.rec, DARKGREEN);
+                    DrawTextEx(font_default_, "S", Vector2{tile.rec.x + 7, tile.rec.y + 2}, tile.font_size, 0, RAYWHITE);
                 } else if (tile.IsTileGoal()) {
                     DrawRectangleRec(tile.rec, RED);
-                    DrawText("G", tile.rec.x + 5, tile.rec.y + 2, tile.font_size, BLACK);
+                    DrawTextEx(font_default_, "G", Vector2{tile.rec.x + 7, tile.rec.y + 2}, tile.font_size, 0, RAYWHITE);
                 } else if (tile.IsTileVisited()) {
                     DrawRectangleRec(tile.rec, Fade(DARKBLUE, 0.3f));
                 } else if (tile.IsTilePath()) {
