@@ -9,9 +9,6 @@
 
 #include "tile.hpp"
 
-// Forward declaration to avoid circular dependencies?
-// class Gui;
-
 struct Coordinates {
     int x, y;
     friend bool operator==(const Coordinates& a, const Coordinates& b) {

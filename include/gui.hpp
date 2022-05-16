@@ -4,9 +4,6 @@
 
 #include "search.hpp"
 
-// Forward declaration to avoid circular dependencies?
-// class Search;
-
 // GUI measurements in pixel
 constexpr int kScreenWidth = 1360;
 constexpr int kScreenHeight = 830;
