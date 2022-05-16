@@ -21,22 +21,23 @@ Gui::Gui()
     InitWindow(kScreenWidth, kScreenHeight, "Shortest Path raylib");
 
     // Initialize upper buttons
+    const int y = 50;
     int p1 = 40;
     int p2 = p1 + 130;
     int p3 = p2 + 130;
-    preset_button1_ = Tile{0, 0, kTileLength, p1, 120, 40, "Preset 1"};
-    preset_button2_ = Tile{0, 0, kTileLength, p2, 120, 40, "Preset 2"};
-    preset_button3_ = Tile{0, 0, kTileLength, p3, 120, 40, "Preset 3"};
+    preset_button1_ = Tile{0, 0, y, p1, 120, 40, "Preset 1"};
+    preset_button2_ = Tile{0, 0, y, p2, 120, 40, "Preset 2"};
+    preset_button3_ = Tile{0, 0, y, p3, 120, 40, "Preset 3"};
 
     int bfs = 700;
     int djk = bfs + 120;
     int ast = djk + 120;
-    bfs_button_ = Tile{0, 40, kTileLength, bfs, 110, 40, "Bfs"};
-    dijkstra_button_ = Tile{0, 8, kTileLength, djk, 110, 40, "Dijkstra"};
-    astar_button_ = Tile{0, 23, kTileLength, ast, 110, 40, "AStar"};
+    bfs_button_ = Tile{0, 40, y, bfs, 110, 40, "Bfs"};
+    dijkstra_button_ = Tile{0, 8, y, djk, 110, 40, "Dijkstra"};
+    astar_button_ = Tile{0, 23, y, ast, 110, 40, "AStar"};
 
-    clear_button_ = Tile(0, 0, kTileLength, 1090, 100, 40, "Clear");
-    search_button_ = Tile(0, 0, kTileLength, 1200, 120, 40, "Search");
+    clear_button_ = Tile(0, 0, y, 1090, 100, 40, "Clear");
+    search_button_ = Tile(0, 0, y, 1200, 120, 40, "Search");
 
     // Initialize grid
     for (int i = 0, max_tiles = kMaxTilesX * kMaxTilesY; i < max_tiles; ++i) {
