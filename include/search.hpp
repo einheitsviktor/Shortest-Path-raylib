@@ -62,6 +62,7 @@ private:
     bool InBounds(Coordinates& id, std::vector<std::vector<Tile>>& grid) const;
     bool Passable(Coordinates& id) const;
     std::vector<Coordinates> Neighbors(Coordinates& id, std::vector<std::vector<Tile>>& grid) const;
+    std::string GetVector(Coordinates& current, Coordinates& from);
     void CollectObstacles(const std::vector<std::vector<Tile>>& grid);
     void SetPath(std::vector<std::vector<Tile>>& grid, const Tile* start_ptr, Tile* goal_ptr);
     double Cost(Coordinates& from_node, Coordinates& to_node) const;

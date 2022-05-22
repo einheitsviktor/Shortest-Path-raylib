@@ -37,7 +37,7 @@ Gui::Gui()
     font_unicode_.glyphCount = 95;
 
     font_unicode_.glyphs = LoadFontData(fd, fs, 24, nullptr, 95, FONT_DEFAULT);
-    atlas = GenImageFontAtlas(font_unicode_.glyphs, &font_unicode_.recs, 25, 16, 4, 0);
+    atlas = GenImageFontAtlas(font_unicode_.glyphs, &font_unicode_.recs, 95, 16, 4, 0);
     font_unicode_.texture = LoadTextureFromImage(atlas);
     UnloadImage(atlas);
 
@@ -300,14 +300,12 @@ void Gui::GenerateOutput() {
     BeginDrawing();
     {
         ClearBackground(RAYWHITE);
-        static const char* k_arrow_codepoints = "\x8ajochen?";
-        DrawTextEx(font_unicode_, "BCAD JKIL", Vector2{10, 10}, 24, 5, BLACK);
 
         GeneratePresetButton(mouse_position_, &preset_button1_);
         GeneratePresetButton(mouse_position_, &preset_button2_);
         GeneratePresetButton(mouse_position_, &preset_button3_);
 
-        GenerateActionButton(mouse_position_,&vector_field_button_, DARKBLUE);
+        GenerateActionButton(mouse_position_, &vector_field_button_, DARKBLUE);
         if (is_vector_field_) {
             DrawRectangleLinesEx(vector_field_button_.rec, 3.0f, GOLD);
         }
@@ -320,6 +318,7 @@ void Gui::GenerateOutput() {
         GenerateActionButton(mouse_position_, &clear_button_, SKYBLUE);
         GenerateActionButton(mouse_position_, &search_button_, DARKGREEN);
 
+        int offset;
         for (const auto& row : grid_) {
             for (const auto& tile : row) {
                 if (tile.IsTileObstacle()) {
@@ -332,7 +331,9 @@ void Gui::GenerateOutput() {
                     DrawTextEx(font_default_, "G", Vector2{tile.rec.x + 7, tile.rec.y + 2}, tile.font_size, 0, RAYWHITE);
                 } else if (tile.IsTileVisited()) {
                     DrawRectangleRec(tile.rec, Fade(DARKBLUE, 0.3f));
-                    DrawTextEx(font_unicode_, tile.text.c_str(), Vector2{tile.rec.x + 3, tile.rec.y + 4}, tile.font_size, 0, RAYWHITE);
+                    offset = (tile.text == "C" || tile.text == "D") ? 8 : 3;
+                    DrawTextEx(font_unicode_, is_vector_field_ ? tile.text.c_str() : "",
+                               Vector2{tile.rec.x + offset, tile.rec.y + 4}, tile.font_size, 0, RAYWHITE);
                 } else if (tile.IsTilePath()) {
                     DrawRectangleRec(tile.rec, Fade(GOLD, 0.5f));
                 } else {
@@ -348,6 +349,7 @@ void Gui::ClearGrid() {
     for (auto& row : grid_) {
         for (auto& tile : row) {
             if (!tile.IsTileStart() && !tile.IsTileGoal()) {
+                tile.text = "";
                 tile.SetTileEmpty();
             }
         }
@@ -359,6 +361,7 @@ void Gui::PurgeGrid() {
     for (auto& row : grid_) {
         for (auto& tile : row) {
             if (tile.IsTilePath() || tile.IsTileVisited()) {
+                tile.text = "";
                 tile.SetTileEmpty();
             }
         }

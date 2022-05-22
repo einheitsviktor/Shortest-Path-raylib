@@ -23,6 +23,18 @@ std::vector<Coordinates> Search::Neighbors(Coordinates& id, std::vector<std::vec
     return ret;
 }
 
+std::string Search::GetVector(Coordinates& current, Coordinates& from) {
+    if (from.x > current.x) {
+        return "A";  // Right arrow
+    } else if (from.x < current.x) {
+        return "B";  // Left arrow
+    } else if (from.y > current.y) {
+        return "D";  // Up arrow
+    } else {
+        return "C";  // Down arrow
+    }
+}
+
 void Search::CollectObstacles(const std::vector<std::vector<Tile>>& grid) {
     for (const auto& row : grid) {
         for (const auto& col : row) {
@@ -86,6 +98,7 @@ void Search::Bfs(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* go
                     goal_ptr->SetTileGoal();
                 } else {
                     grid[next.y][next.x].SetTileVisited();
+                    grid[next.y][next.x].text = GetVector(next, current);
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(3));
             }
@@ -122,6 +135,7 @@ void Search::Dijkstra(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Til
                     goal_ptr->SetTileGoal();
                 } else {
                     grid[next.y][next.x].SetTileVisited();
+                    grid[next.y][next.x].text = GetVector(next, current);
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(3));
             }
@@ -159,6 +173,7 @@ void Search::AStar(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* 
                     goal_ptr->SetTileGoal();
                 } else {
                     grid[next.y][next.x].SetTileVisited();
+                    grid[next.y][next.x].text = GetVector(next, current);
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(6));
             }
