@@ -41,6 +41,7 @@ private:
 
     Search search_;
     Font font_default_ = { 0 };
+    Font font_unicode_ = { 0 };
 
     Vector2 mouse_position_;
     TileState origin_state_;
@@ -51,6 +52,8 @@ private:
     Tile preset_button1_;
     Tile preset_button2_;
     Tile preset_button3_;
+
+    Tile vector_field_button_;
 
     Tile bfs_button_;
     Tile dijkstra_button_;
@@ -63,6 +66,7 @@ private:
     bool goal_button_drag_;
     bool search_executed_;
     bool is_gui_busy_;
+    bool is_vector_field_;
 
     std::vector<std::vector<Tile>> grid_;
 

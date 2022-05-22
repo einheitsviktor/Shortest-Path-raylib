@@ -14,6 +14,7 @@ Gui::Gui()
       goal_button_drag_(false),
       search_executed_(false),
       is_gui_busy_(false),
+      is_vector_field_(false),
       grid_(std::vector<std::vector<Tile>>(kMaxTilesY, std::vector<Tile>(kMaxTilesX))) {
 
     SetTargetFPS(60);
@@ -29,6 +30,15 @@ Gui::Gui()
     font_default_.glyphs = LoadFontData(file_data, file_size, 24, nullptr, 95, FONT_DEFAULT);
     Image atlas = GenImageFontAtlas(font_default_.glyphs, &font_default_.recs, 95, 16, 4, 0);
     font_default_.texture = LoadTextureFromImage(atlas);
+
+    unsigned int fs = 0;
+    unsigned char* fd = LoadFileData("../resources/Arrows.ttf", &fs);
+    font_unicode_.baseSize = 24;
+    font_unicode_.glyphCount = 95;
+
+    font_unicode_.glyphs = LoadFontData(fd, fs, 24, nullptr, 95, FONT_DEFAULT);
+    atlas = GenImageFontAtlas(font_unicode_.glyphs, &font_unicode_.recs, 25, 16, 4, 0);
+    font_unicode_.texture = LoadTextureFromImage(atlas);
     UnloadImage(atlas);
 
     // Initialize upper buttons
@@ -40,6 +50,8 @@ Gui::Gui()
     preset_button2_ = Tile{0, 0, y, p2, 120, 40, "Preset 2"};
     preset_button3_ = Tile{0, 0, y, p3, 120, 40, "Preset 3"};
 
+    vector_field_button_ = Tile{10, 13, y, 470, 180, 40, "Vector field"};
+
     int bfs = 700;
     int djk = bfs + 120;
     int ast = djk + 120;
@@ -48,7 +60,7 @@ Gui::Gui()
     astar_button_ = Tile{10, 23, y, ast, 110, 40, "AStar"};
 
     clear_button_ = Tile(10, 20, y, 1090, 100, 40, "Clear");
-    search_button_ = Tile(10, 20, y, 1200, 120, 40, "Search");
+    search_button_ = Tile(10, 25, y, 1200, 120, 40, "Search");
 
     // Initialize grid
     for (int i = 0, max_tiles = kMaxTilesX * kMaxTilesY; i < max_tiles; ++i) {
@@ -56,7 +68,7 @@ Gui::Gui()
         int x = i % kMaxTilesX;
         int rec_x = 30.0f + kTileLength * (i % kMaxTilesX) + 1.0f * (i % kMaxTilesX);
         int rec_y = 150.0f + kTileLength * (i / kMaxTilesX) + 1.0f * (i / kMaxTilesX);
-        grid_[y][x] = Tile(y, x, rec_y, rec_x, kTileLength, kTileLength);
+        grid_[y][x] = Tile(y, x, rec_y, rec_x, kTileLength, kTileLength, "");
     }
     grid_[3][3].SetTileStart();
     grid_[21][46].SetTileGoal();
@@ -66,6 +78,7 @@ Gui::Gui()
 
 Gui::~Gui() {
     UnloadFont(font_default_);
+    UnloadFont(font_unicode_);
     CloseWindow();
 }
 
@@ -136,7 +149,10 @@ void Gui::ProcessActionButton(const Vector2& mouse_pos, Tile* button) {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             button->SetButtonPressed();
         } else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            if (button == &clear_button_) {
+            if (button == &vector_field_button_) {
+                // Toggle vector_field_button_
+                is_vector_field_ = !is_vector_field_;
+            } else if (button == &clear_button_) {
                 ClearGrid();
             } else if (button == &search_button_) {
                 if (search_executed_) {
@@ -174,6 +190,8 @@ void Gui::ProcessInput() {
     ProcessPresetButton(mouse_position_, &preset_button1_);
     ProcessPresetButton(mouse_position_, &preset_button2_);
     ProcessPresetButton(mouse_position_, &preset_button3_);
+
+    ProcessActionButton(mouse_position_, &vector_field_button_);
 
     ProcessAlgorithmButton(mouse_position_, &bfs_button_);
     ProcessAlgorithmButton(mouse_position_, &dijkstra_button_);
@@ -282,10 +300,17 @@ void Gui::GenerateOutput() {
     BeginDrawing();
     {
         ClearBackground(RAYWHITE);
+        static const char* k_arrow_codepoints = "\x8ajochen?";
+        DrawTextEx(font_unicode_, "BCAD JKIL", Vector2{10, 10}, 24, 5, BLACK);
 
         GeneratePresetButton(mouse_position_, &preset_button1_);
         GeneratePresetButton(mouse_position_, &preset_button2_);
         GeneratePresetButton(mouse_position_, &preset_button3_);
+
+        GenerateActionButton(mouse_position_,&vector_field_button_, DARKBLUE);
+        if (is_vector_field_) {
+            DrawRectangleLinesEx(vector_field_button_.rec, 3.0f, GOLD);
+        }
 
         GenerateAlgorithmButton(mouse_position_, &bfs_button_);
         GenerateAlgorithmButton(mouse_position_, &dijkstra_button_);
@@ -307,6 +332,7 @@ void Gui::GenerateOutput() {
                     DrawTextEx(font_default_, "G", Vector2{tile.rec.x + 7, tile.rec.y + 2}, tile.font_size, 0, RAYWHITE);
                 } else if (tile.IsTileVisited()) {
                     DrawRectangleRec(tile.rec, Fade(DARKBLUE, 0.3f));
+                    DrawTextEx(font_unicode_, tile.text.c_str(), Vector2{tile.rec.x + 3, tile.rec.y + 4}, tile.font_size, 0, RAYWHITE);
                 } else if (tile.IsTilePath()) {
                     DrawRectangleRec(tile.rec, Fade(GOLD, 0.5f));
                 } else {
