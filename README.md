@@ -17,7 +17,7 @@ Regarding the logic I followed this [guide](https://www.redblobgames.com/pathfin
 ## Basic Build Instructions
 
 1. Clone this repo.
-2. Make a build directory in the top level directory: `mkdir build && cd build`
+2. Navigate to the root directory and create a build directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run: `./Shortest-Path-raylib`
 
