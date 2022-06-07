@@ -1,23 +1,30 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
 project(Shortest-Path-raylib)
+
+# Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# raylib
-find_package(raylib QUIET)
-# if (NOT raylib_FOUND)
-#     include(FetchContent)
-#     FetchContent_Declare(
-#         raylib
-#         GIT_REPOSITORY https://github.com/raysan5/raylib.git
-#         GIT_TAG 4.0.0
-#     )
-#     FetchContent_MakeAvailable(raylib)
-# endif()
+# Dependencies
+find_package(raylib 4.0.0 QUIET) # QUIET or REQUIRED
+if (NOT raylib_FOUND) # If there's none, fetch and build raylib
+  include(FetchContent)
+  FetchContent_Declare(
+    raylib
+    URL https://github.com/raysan5/raylib/archive/refs/tags/4.0.0.tar.gz
+  )
+  FetchContent_GetProperties(raylib)
+  if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
+    set(FETCHCONTENT_QUIET NO)
+    FetchContent_Populate(raylib)
+    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
+    add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
+  endif()
+endif()
 
 # This is the main part:
 include_directories(include)
 add_executable(
-    Shortest-Path-raylib
+    ${PROJECT_NAME}
     src/main.cpp
     src/gui.cpp
     src/search.cpp
