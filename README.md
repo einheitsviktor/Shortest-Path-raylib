@@ -1,6 +1,6 @@
 # Shortest-Path-raylib
 
-This is an improvement to my [Shortest-path GUI](https://github.com/einheitsviktor/Shortest-Path) implemented in Qt.
+This is an improvement of my [Shortest-path GUI](https://github.com/einheitsviktor/Shortest-Path) implemented in Qt.
 This time I use [raylib](https://www.raylib.com/) ("... a simple and easy-to-use library to enjoy videogames programming.") to make the interactions more convenient.
 <!-- This is my attempt to implement a GUI in C++ to find the shortest path in a two-dimensional field. -->
 
