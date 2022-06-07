@@ -33,24 +33,6 @@ struct hash<Coordinates> {
 };
 }  // namespace std
 
-// Wrapper for own priority queue sort
-template <typename T, typename priority_t>
-struct PrioriyQueue {
-    std::priority_queue<std::pair<priority_t, T>, std::vector<std::pair<priority_t, T>>, std::greater<std::pair<priority_t, T>>>
-        elements;
-    inline bool Empty() const {
-        return elements.empty();
-    }
-    inline void Put(T item, priority_t priority) {
-        elements.emplace(priority, item);
-    }
-    T Get() {
-        T ret = elements.top().second;
-        elements.pop();
-        return ret;
-    }
-};
-
 class Search {
 public:
     Search() = default;

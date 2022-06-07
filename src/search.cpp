@@ -1,5 +1,7 @@
 #include "search.hpp"
 
+#include <algorithm>
+
 bool Search::InBounds(Coordinates& id, std::vector<std::vector<Tile>>& grid) const {
     return 0 <= id.x && id.x < grid[0].size() && 0 <= id.y && id.y < grid.size();
 }
@@ -113,14 +115,17 @@ void Search::Dijkstra(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Til
     gui_busy = true;
     CollectObstacles(grid);
 
-    PrioriyQueue<Coordinates, double> frontier;
-    frontier.Put(Coordinates{start_ptr->x, start_ptr->y}, 0);
+    std::vector<std::pair<Coordinates, double>> frontier;
+    frontier.emplace_back(std::make_pair(Coordinates{start_ptr->x, start_ptr->y}, 0));
 
     came_from_[Coordinates{start_ptr->x, start_ptr->y}] = Coordinates{start_ptr->x, start_ptr->y};
     cost_so_far_[Coordinates{start_ptr->x, start_ptr->y}] = 0;
 
-    while (!frontier.Empty()) {
-        Coordinates current = frontier.Get();
+    while (!frontier.empty()) {
+        std::sort(frontier.begin(), frontier.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
+        Coordinates current = frontier.back().first;
+        frontier.pop_back();
+
         if (current == Coordinates{goal_ptr->x, goal_ptr->y}) {
             SetPath(grid, start_ptr, goal_ptr);
             break;
@@ -130,7 +135,7 @@ void Search::Dijkstra(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Til
             if (cost_so_far_.find(next) == cost_so_far_.end() || new_cost < cost_so_far_[next]) {
                 cost_so_far_[next] = new_cost;
                 came_from_[next] = current;
-                frontier.Put(next, new_cost);
+                frontier.push_back(std::make_pair(next, new_cost));
                 if (grid[next.y][next.x].IsTileGoal()) {
                     goal_ptr->SetTileGoal();
                 } else {
@@ -150,14 +155,16 @@ void Search::AStar(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* 
     gui_busy = true;
     CollectObstacles(grid);
 
-    PrioriyQueue<Coordinates, double> frontier;
-    frontier.Put(Coordinates{start_ptr->x, start_ptr->y}, 0);
+    std::vector<std::pair<Coordinates, double>> frontier;
+    frontier.emplace_back(std::make_pair(Coordinates{start_ptr->x, start_ptr->y}, 0));
 
     came_from_[Coordinates{start_ptr->x, start_ptr->y}] = Coordinates{start_ptr->x, start_ptr->y};
     cost_so_far_[Coordinates{start_ptr->x, start_ptr->y}] = 0;
 
-    while (!frontier.Empty()) {
-        Coordinates current = frontier.Get();
+    while (!frontier.empty()) {
+        std::sort(frontier.begin(), frontier.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
+        Coordinates current = frontier.back().first;
+        frontier.pop_back();
         if (current == Coordinates{goal_ptr->x, goal_ptr->y}) {
             SetPath(grid, start_ptr, goal_ptr);
             break;
@@ -167,7 +174,7 @@ void Search::AStar(std::vector<std::vector<Tile>>& grid, Tile* start_ptr, Tile* 
             if (cost_so_far_.find(next) == cost_so_far_.end() || new_cost < cost_so_far_[next]) {
                 cost_so_far_[next] = new_cost;
                 double priority = new_cost + Heuristic(next, Coordinates{goal_ptr->x, goal_ptr->y});
-                frontier.Put(next, priority);
+                frontier.push_back(std::make_pair(next, priority));
                 came_from_[next] = current;
                 if (grid[next.y][next.x].IsTileGoal()) {
                     goal_ptr->SetTileGoal();
