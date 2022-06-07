@@ -5,7 +5,7 @@ This time I use [raylib](https://www.raylib.com/) ("... a simple and easy-to-use
 
 Regarding the logic I followed this [guide](https://www.redblobgames.com/pathfinding/a-star/introduction.html) very closely.
 
-![Screenshot](Screenshot.png)
+![Demo](https://github.com/einheitsviktor/Shortest-Path-raylib/blob/main/Demo.gif)
 
 ## Dependencies for Running Locally
 * cmake >= 3.11
