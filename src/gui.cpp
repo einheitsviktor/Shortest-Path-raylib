@@ -1,4 +1,5 @@
 #include "gui.hpp"
+#include "fonts.hpp"
 
 #include <raylib.h>
 
@@ -21,22 +22,18 @@ Gui::Gui()
     // Set GUI width and height
     InitWindow(kScreenWidth, kScreenHeight, "Shortest Path raylib");
 
-    // Default font generation from TTF font
-    unsigned int file_size = 0;
-    unsigned char* file_data = LoadFileData("../resources/anonymous_pro_bold.ttf", &file_size);
+    // Font generation from TTF font byte array
+    // 153616 == hardcoded byte array size of anonymous_pro_bold_ttf
+    font_default_.glyphs = LoadFontData(anonymous_pro_bold_ttf, 153616, 24, nullptr, 95, FONT_DEFAULT);
     font_default_.baseSize = 24;
     font_default_.glyphCount = 95;
-
-    font_default_.glyphs = LoadFontData(file_data, file_size, 24, nullptr, 95, FONT_DEFAULT);
     Image atlas = GenImageFontAtlas(font_default_.glyphs, &font_default_.recs, 95, 16, 4, 0);
     font_default_.texture = LoadTextureFromImage(atlas);
 
-    unsigned int fs = 0;
-    unsigned char* fd = LoadFileData("../resources/Arrows.ttf", &fs);
+    // 12136 == hardcoded byte array size of arrows_ttf
+    font_unicode_.glyphs = LoadFontData(arrows_ttf, 12136, 24, nullptr, 95, FONT_DEFAULT);
     font_unicode_.baseSize = 24;
     font_unicode_.glyphCount = 95;
-
-    font_unicode_.glyphs = LoadFontData(fd, fs, 24, nullptr, 95, FONT_DEFAULT);
     atlas = GenImageFontAtlas(font_unicode_.glyphs, &font_unicode_.recs, 95, 16, 4, 0);
     font_unicode_.texture = LoadTextureFromImage(atlas);
     UnloadImage(atlas);
