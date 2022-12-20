@@ -31,7 +31,9 @@
 *.out
 *.app
 
-.cache/*
-build/*
+.cache/
+build/
+debug/
+release/
 
 session.vim
