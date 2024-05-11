@@ -37,3 +37,4 @@ debug/
 release/
 
 session.vim
+compile_commands.json
